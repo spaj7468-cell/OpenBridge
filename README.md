@@ -69,6 +69,8 @@ See [the example JSON](examples/scene-specs/simple-2d-scene.json). The validator
 - [Quick start](docs/QUICKSTART.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [MCP and adapter contract](docs/PROTOCOL.md)
+- [DeepSeek integration plan](docs/DEEPSEEK_INTEGRATION.md)
+- [Documentation index](docs/README.md)
 - [Zero-script workflow](docs/ZERO_SCRIPT_WORKFLOW.md)
 - [Security requirements](docs/SECURITY.md)
 - [Compatibility policy](docs/COMPATIBILITY.md)
