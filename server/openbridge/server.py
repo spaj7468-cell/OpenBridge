@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 from typing import Any
@@ -20,6 +21,8 @@ PORT = int(os.getenv("OPENBRIDGE_PORT", "8765"))
 GODOT_BRIDGE_URL = os.getenv("OPENBRIDGE_GODOT_HEALTH_URL", "http://127.0.0.1:8766/health")
 MAX_SCENE_NODES = 200
 MAX_TREE_DEPTH = 20
+MAX_SCRIPT_BYTES = 128 * 1024
+_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
 mcp = FastMCP("OpenBridge", host=HOST, port=PORT)
 
@@ -117,6 +120,70 @@ def _validate_scene_spec(scene_spec: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _validate_script_patch(
+    script_path: str,
+    content: str,
+    operation: str,
+    expected_sha256: str | None = None,
+) -> dict[str, Any]:
+    """Validate a proposed GDScript file payload without reading or writing files."""
+    errors: list[dict[str, str]] = []
+
+    if not isinstance(script_path, str) or not script_path.strip():
+        errors.append({"path": "script_path", "message": "script_path must be a non-empty project-relative path."})
+    else:
+        if script_path.startswith(("/", "\\\\")) or ":" in script_path:
+            errors.append({"path": "script_path", "message": "Absolute paths and drive/resource prefixes are not allowed."})
+        if "\\\\" in script_path:
+            errors.append({"path": "script_path", "message": "Use forward slashes in project-relative paths."})
+        parts = script_path.split("/")
+        if any(part in {"", ".", ".."} for part in parts):
+            errors.append({"path": "script_path", "message": "Path segments cannot be empty, '.' or '..'."})
+        if not script_path.endswith(".gd"):
+            errors.append({"path": "script_path", "message": "Only .gd GDScript files are supported by this validator."})
+
+    if operation not in {"create", "update"}:
+        errors.append({"path": "operation", "message": "operation must be 'create' or 'update'."})
+
+    if not isinstance(content, str) or not content.strip():
+        errors.append({"path": "content", "message": "content must be a non-empty string."})
+    elif "\\x00" in content:
+        errors.append({"path": "content", "message": "NUL characters are not allowed."})
+    elif len(content.encode("utf-8")) > MAX_SCRIPT_BYTES:
+        errors.append({"path": "content", "message": f"Script content exceeds the {MAX_SCRIPT_BYTES}-byte limit."})
+
+    if operation == "update":
+        if not isinstance(expected_sha256, str) or not _SHA256_PATTERN.fullmatch(expected_sha256):
+            errors.append({"path": "expected_sha256", "message": "Updates require the expected SHA-256 of the current file."})
+    elif operation == "create" and expected_sha256 is not None:
+        errors.append({"path": "expected_sha256", "message": "New-file operations must not provide expected_sha256."})
+
+    return {
+        "valid": not errors,
+        "operation": operation if operation in {"create", "update"} else None,
+        "script_path": script_path if isinstance(script_path, str) else None,
+        "content_bytes": len(content.encode("utf-8")) if isinstance(content, str) else 0,
+        "errors": errors,
+        "note": "Validation only: no project file is read, written, or executed. A real editor adapter and approval flow are still required.",
+    }
+
+
+@mcp.tool()
+def godot_validate_script_patch(
+    script_path: str,
+    content: str,
+    operation: str,
+    expected_sha256: str | None = None,
+) -> dict[str, Any]:
+    """Validate a proposed GDScript create/update payload without changing project files.
+
+    Use project-relative .gd paths. Updates must include the expected SHA-256
+    of the current file to help prevent stale edits. This tool does not write,
+    parse, or execute GDScript; it validates the request envelope only.
+    """
+    return _validate_script_patch(script_path, content, operation, expected_sha256)
+
+
 @mcp.tool()
 def openbridge_status() -> dict[str, Any]:
     """Return OpenBridge runtime status and the current implementation stage."""
@@ -140,12 +207,15 @@ def openbridge_capabilities() -> dict[str, Any]:
             "capability discovery",
             "Godot adapter health probe",
             "bounded data-only scene specification validation",
+            "GDScript patch-envelope validation (no file writes or execution)",
         ],
         "planned": [
-            "Godot editor plugin and scene-tree inspection",
+            "authenticated Godot editor bridge and scene-tree inspection",
             "approved scene creation and property editing",
+            "GDScript file reading, diff preview, application, and Godot parser validation",
+            "project run/playtest and debugger feedback loop",
             "browser extension",
-            "DeepSeek-guided plan/preview/apply workflow",
+            "DeepSeek-guided plan/preview/apply/verify workflow",
             "cross-platform quick launcher",
         ],
     }
