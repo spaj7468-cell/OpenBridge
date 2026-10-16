@@ -6,6 +6,7 @@ OpenBridge is an early-stage local MCP runtime and planned editor/browser adapte
 
 - [Quick start](QUICKSTART.md) — launch the prototype and connect an MCP host.
 - [Architecture](ARCHITECTURE.md) — components and request flow.
+- [Godot agent workflow](GODOT_AGENT_WORKFLOW.md) — ZeroScript-style inspect/edit/run/debug loop.
 - [Roadmap](ROADMAP.md) — milestones and acceptance criteria.
 - [Zero-script workflow](ZERO_SCRIPT_WORKFLOW.md) — the user experience and its limits.
 
