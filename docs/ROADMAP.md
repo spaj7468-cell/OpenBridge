@@ -49,7 +49,7 @@ A roadmap item is complete only when the acceptance criteria have been tested in
 - [ ] Run Godot's parser/editor validation and return precise diagnostics.
 - [ ] Show the complete diff and require confirmation for applying edits.
 - [ ] Keep script writing separate from running scripts or launching the project.
-- **Acceptance:** the agent can create and repair a small gameplay script, show the diff, pass parser validation, and report errors honestly.
+- **Acceptance:** the agent can preview and apply a small gameplay script, show recoverable changes, pass parser validation, and report errors honestly. Current write/preview operations are implemented in the prototype; parser validation and Godot manual verification remain open.
 
 ## M5 — Run, test, and repair loop
 - [ ] Launch the current project or selected scene through Godot editor/run APIs.
