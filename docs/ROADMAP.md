@@ -12,7 +12,7 @@ A roadmap item is complete only when the acceptance criteria have been tested in
 - [x] Expose read-only Godot info/tree/script tools through MCP.
 - [x] Add CI workflow definition.
 - [ ] Select and add a license.
-- [ ] Confirm the latest CI workflow passes.
+- [x] Confirm CI passes for Python tests, browser extension checks, and a pinned Godot 4.4.1 headless editor smoke test.
 
 ## M1 — Local runtime and bridge security
 - [x] Implement initial MCP server and status/capability tools.
