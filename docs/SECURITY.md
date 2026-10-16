@@ -38,6 +38,7 @@ Potential risks include:
 - Use size limits and expected-original hashes for patches to avoid overwriting concurrent edits.
 - Back up changed files or clearly rely on user-enabled version control.
 - Keep script editing separate from project execution.
+- Treat parser success only as syntax/compile validation, not as proof that code is safe or behaves correctly.
 - Godot GDScript is powerful and must not be described as sandboxed. Run changed code only through a visible, approved action.
 - Do not provide unrestricted shell access as a shortcut for editor features.
 
