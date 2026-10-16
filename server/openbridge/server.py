@@ -385,7 +385,10 @@ def godot_validate_scene_spec(scene_spec: dict[str, Any]) -> dict[str, Any]:
 
 
 
-class _BrowserGatewayHandler(__import__("http.server").server.BaseHTTPRequestHandler):
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+
+class _BrowserGatewayHandler(BaseHTTPRequestHandler):
     """Small authenticated loopback REST gateway for the browser extension.
 
     It is deliberately separate from MCP transport: browser extensions need a
@@ -470,11 +473,8 @@ class _BrowserGatewayHandler(__import__("http.server").server.BaseHTTPRequestHan
             if current.get("ok") and current.get("data", {}).get("content") is not None:
                 operation = "update"
                 expected = current["data"].get("sha256", "")
-            elif current.get("error") == "ADAPTER_HTTP_ERROR" or current.get("status") == 404:
-                operation = "create"
-                expected = None
             else:
-                # Adapter wraps HTTP failures; 404 is surfaced in status.
+                # Only a genuine missing-file response means this is a create.
                 detail = current.get("detail", {})
                 if current.get("status") == 404 or detail.get("status") == 404:
                     operation, expected = "create", None
@@ -514,7 +514,6 @@ class _BrowserGatewayHandler(__import__("http.server").server.BaseHTTPRequestHan
 
 def _start_browser_gateway() -> None:
     """Start the authenticated extension API on loopback, next to MCP."""
-    from http.server import ThreadingHTTPServer
     gateway_port = int(os.getenv("OPENBRIDGE_BROWSER_PORT", "8767"))
     gateway = ThreadingHTTPServer(("127.0.0.1", gateway_port), _BrowserGatewayHandler)
     gateway.daemon_threads = True
