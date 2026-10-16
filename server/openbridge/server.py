@@ -247,8 +247,10 @@ def openbridge_status() -> dict[str, Any]:
         "status": "foundation",
         "transport": "MCP Streamable HTTP",
         "endpoint": f"http://{HOST}:{PORT}/mcp",
-        "godot_mutations_enabled": False,
-        "message": "Runtime is available; Godot project editing is not implemented in this milestone.",
+        "godot_script_writes": "available only when enabled in the Godot editor dock",
+        "godot_scene_mutations_enabled": False,
+        "godot_code_execution_enabled": False,
+        "message": "The editor adapter supports guarded GDScript file writes; it does not execute scripts or mutate scenes yet.",
     }
 
 
@@ -270,8 +272,9 @@ def openbridge_capabilities() -> dict[str, Any]:
             "approved scene creation and property editing",
             "Godot parser validation and run/playtest feedback loop",
             "project run/playtest and debugger feedback loop",
-            "browser extension",
-            "DeepSeek-guided plan/preview/apply/verify workflow",
+            "authenticated browser-to-agent tool execution",
+            "DeepSeek provider and iterative plan/preview/apply/verify workflow",
+            "Godot parser validation and project run/debug feedback",
             "cross-platform quick launcher",
         ],
     }
