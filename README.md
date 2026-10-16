@@ -57,7 +57,7 @@ The local bridge binds to loopback by default. It must not silently upload proje
 | Browser extension | User-triggered active-tab title/URL capture and copy; no page-content scraping or MCP tool execution |
 | Godot editor info, bounded scene-tree inspection, script reading | Implemented in prototype; Godot manual verification pending |
 | GDScript preview and guarded file application | Implemented prototype; Godot manual verification pending |
-| Godot parser validation and run/playtest | Planned |
+| Godot-native GDScript parser validation | Implemented prototype; Godot manual verification pending |
 | Run/playtest and debugger feedback loop | Planned |
 | DeepSeek API integration | Planned |
 
