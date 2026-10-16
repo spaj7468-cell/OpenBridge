@@ -1,0 +1,10 @@
+config_version=5
+
+[application]
+
+config/name="OpenBridge Adapter Smoke Test"
+run/main_scene="res://scenes/SmokeTest.tscn"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/openbridge/plugin.cfg")
