@@ -210,6 +210,17 @@ func _dispatch_request(request: Dictionary) -> Dictionary:
 		var count := [0]
 		var tree := _serialize_node(root, 1, count)
 		return {"status": 200, "body": {"scene_path": root.scene_file_path, "node_count": count[0], "root": tree}}
+	if method == "POST" and path == "/script/validate":
+		var validation_payload: Variant = JSON.parse_string(request.get("body_text", ""))
+		if not validation_payload is Dictionary:
+			return {"status": 400, "body": {"error": "INVALID_JSON"}}
+		var source: Variant = validation_payload.get("content", "")
+		if not source is String or source.is_empty() or source.to_utf8_buffer().size() > MAX_SCRIPT_BYTES or source.to_utf8_buffer().has(0):
+			return {"status": 400, "body": {"error": "INVALID_SCRIPT_CONTENT", "limit_bytes": MAX_SCRIPT_BYTES}}
+		var candidate := GDScript.new()
+		candidate.source_code = source
+		var parse_result := candidate.reload()
+		return {"status": 200, "body": {"valid": parse_result == OK, "error_code": parse_result, "note": "Godot GDScript parser validation only; script was not saved or executed."}}
 	if method == "POST" and path in ["/script/read", "/script/preview", "/script/apply"]:
 		var payload: Variant = JSON.parse_string(request.get("body_text", ""))
 		if not payload is Dictionary:
