@@ -1,41 +1,52 @@
 # Zero-script workflow
 
-The goal is not to claim that software contains no code. The goal is that a user can complete supported development tasks without personally writing scripts.
+“Zero script” means the user does not need to manually write code. It does **not** mean the AI must avoid scripts. In Godot, custom gameplay and interactive interfaces often require GDScript, so OpenBridge should generate and edit it as part of the agent workflow.
+
+The product target follows the practical pattern of ZeroScript for Roblox Studio: AI chat → browser/local bridge → editor tools → actual result → diagnostics returned to AI.
 
 ## User journey
 
-1. **Connect:** install the Godot add-on or browser extension and start the local OpenBridge runtime.
-2. **Choose a target:** select the Godot project, active scene, or permitted browser tab.
-3. **Describe the result:** for example, “Create a simple 2D player scene with a camera and collision.”
-4. **Generate a structured plan:** the AI proposes nodes, properties, resources, and file changes as typed data.
-5. **Review:** OpenBridge shows what will be created, changed, or overwritten.
-6. **Approve:** the user confirms the plan.
-7. **Apply:** the editor plugin uses supported editor APIs; the browser adapter performs only approved operations.
-8. **Verify:** run validation and report success, warnings, or failures with actionable explanations.
-9. **Undo or recover:** offer undo where supported and keep changes easy to inspect in version control.
+1. **Connect:** install the Godot add-on and start the local OpenBridge runtime.
+2. **Choose a project:** the user selects the Godot project and relevant scene.
+3. **Describe the result:** for example, “Make a 2D character that moves with WASD, has a camera, and shows a health bar.”
+4. **Inspect:** the agent checks the current scene, scripts, resources, and relevant errors instead of blindly replacing files.
+5. **Plan:** it lists scene changes, new scripts, edits, resources, and tests.
+6. **Preview:** show a scene-tree summary and exact GDScript diffs.
+7. **Approve:** the user confirms the changes according to the configured policy.
+8. **Apply:** the editor adapter creates nodes/resources and writes approved script patches.
+9. **Validate:** run parser checks and inspect project diagnostics.
+10. **Test:** launch the scene/project only through a visible run action; collect relevant logs and errors.
+11. **Repair:** the AI proposes focused fixes based on actual results.
+12. **Recover:** keep backups/version-control diffs and allow stopping the agent.
 
 ## Example request
 
-> Create a 2D player scene with a CharacterBody2D root, a Sprite2D child, a CollisionShape2D child, and a Camera2D. Do not generate scripts. Show me the node tree before applying it.
+> Create a 2D player scene with movement, collision, camera follow, and a clean health-bar UI. Write the GDScript needed, connect everything, run the scene, and fix any errors. Show me the changes before applying them.
 
 Expected plan preview:
+- Create or update the player scene and required nodes.
+- Add a movement script and health/UI logic if the project does not already contain equivalent systems.
+- Configure collision and camera nodes.
+- Show exact files and diffs.
+- Validate scripts before running.
+- Ask for approval before applying and launching changed code.
+- Return Godot errors and test outcome rather than claiming the scene works without testing.
 
-```text
-Player (CharacterBody2D)
-├── Sprite2D
-├── CollisionShape2D
-└── Camera2D
-```
+## Core behavior
 
-The MVP should not invent a sprite, collision resource, or script if the user did not provide one. It should clearly show which resources are placeholders and which tasks require manual input.
+- The user describes desired functionality in natural language.
+- The AI may generate GDScript, scene specifications, UI layouts, and resource configuration.
+- OpenBridge validates file paths, patch bounds, target state, and tool permissions.
+- Script editing and script execution are distinct actions.
+- The adapter returns actual parser/runtime output so the AI can iterate.
+- Existing project code is inspected and preserved where possible.
+- Unsupported operations are reported honestly; no fake “done” responses.
 
-## What “zero script” means
+## Safety and reliability boundaries
 
-- The user does not need to write GDScript or JavaScript for supported operations.
-- AI output is converted into structured data and validated.
-- The system uses known editor APIs and approved commands.
-- Unsupported tasks are reported honestly rather than silently falling back to generated code.
-
-## Limits
-
-Some Godot behaviors require custom logic that cannot be represented by a node tree and properties alone. The product should explain the limitation and offer safe visual configuration or a clearly marked future capability, rather than claiming every possible game feature can be created without code.
+- Never run generated or changed scripts silently.
+- Show diffs before applying edits; use backups or version control.
+- Require approval for execution, destructive edits, overwrites, and operations outside the selected project.
+- Keep file access inside the chosen project by default.
+- Do not execute arbitrary shell commands as a shortcut.
+- A local Godot project is not a sandbox; generated GDScript can have significant effects, so review and visible controls matter.
