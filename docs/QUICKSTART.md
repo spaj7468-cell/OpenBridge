@@ -35,7 +35,7 @@ If the dock says the token is missing, launch Godot with `OPENBRIDGE_ADAPTER_TOK
 Windows:
 
 ```powershell
-.`start-openbridge.bat
+.\start-openbridge.bat
 ```
 
 Linux/macOS:
@@ -85,4 +85,4 @@ Load the unpacked extension from `browser/extension` in a Chromium-based browser
 - **Adapter disconnected:** confirm the plugin is enabled, port 8766 is free, and `OPENBRIDGE_GODOT_URL` matches the plugin port.
 - **No active scene:** open a scene in the Godot editor.
 - **Script writes disabled:** enable the session-only toggle in the OpenBridge dock.
-- **Parser/runtime validation:** not yet implemented; inspect the script in Godot and do not assume that a saved script is error-free.
+- **Parser validation:** `godot_validate_script` asks Godot to parse proposed source, but it does not prove the script behaves correctly. Runtime diagnostics and automated play-testing are not implemented yet.
