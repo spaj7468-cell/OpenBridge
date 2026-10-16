@@ -262,12 +262,13 @@ def openbridge_capabilities() -> dict[str, Any]:
             "Godot adapter health probe",
             "authenticated read-only Godot editor info and scene-tree inspection",
             "read-only project-relative GDScript inspection",
+            "GDScript preview and opt-in file application with stale-hash checks and backups",
             "bounded data-only scene specification validation",
             "GDScript patch-envelope validation (no file writes or execution)",
         ],
         "planned": [
             "approved scene creation and property editing",
-            "GDScript diff preview, approved application, and Godot parser validation",
+            "Godot parser validation and run/playtest feedback loop",
             "project run/playtest and debugger feedback loop",
             "browser extension",
             "DeepSeek-guided plan/preview/apply/verify workflow",
@@ -314,6 +315,47 @@ def godot_read_script(path: str) -> dict[str, Any]:
     if not validated["valid"]:
         return {"ok": False, "error": "INVALID_SCRIPT_PATH", "details": validated["errors"]}
     result = _godot_request("/script/read", method="POST", payload={"path": path})
+    return result["data"] if result["ok"] else result
+
+
+@mcp.tool()
+def godot_preview_script_patch(path: str, content: str) -> dict[str, Any]:
+    """Preview a GDScript change against the current project file without writing or executing it."""
+    if not isinstance(path, str) or not path.strip() or not isinstance(content, str):
+        return {"ok": False, "error": "INVALID_ARGUMENT"}
+    operation = "update" if path.endswith(".gd") else "create"
+    validated = _validate_script_patch(path, content, operation, "0" * 64 if operation == "update" else None)
+    if not validated["valid"]:
+        return {"ok": False, "error": "INVALID_SCRIPT_PATCH", "details": validated["errors"]}
+    result = _godot_request("/script/preview", method="POST", payload={"path": path, "content": content})
+    return result["data"] if result["ok"] else result
+
+
+@mcp.tool()
+def godot_apply_script_patch(
+    path: str,
+    content: str,
+    operation: str,
+    expected_sha256: str | None = None,
+) -> dict[str, Any]:
+    """Apply a GDScript file change only when script writes are enabled in the Godot dock.
+
+    Updates require the exact current file SHA-256 from preview/read. Creates fail if the file already exists.
+    This saves code but never executes it; running a project remains a separate future capability.
+    """
+    validated = _validate_script_patch(path, content, operation, expected_sha256)
+    if not validated["valid"]:
+        return {"ok": False, "error": "INVALID_SCRIPT_PATCH", "details": validated["errors"]}
+    result = _godot_request(
+        "/script/apply",
+        method="POST",
+        payload={
+            "path": path,
+            "content": content,
+            "operation": operation,
+            "expected_sha256": expected_sha256 or "",
+        },
+    )
     return result["data"] if result["ok"] else result
 
 
