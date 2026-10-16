@@ -384,10 +384,153 @@ def godot_validate_scene_spec(scene_spec: dict[str, Any]) -> dict[str, Any]:
     return _validate_scene_spec(scene_spec)
 
 
+
+class _BrowserGatewayHandler(__import__("http.server").server.BaseHTTPRequestHandler):
+    """Small authenticated loopback REST gateway for the browser extension.
+
+    It is deliberately separate from MCP transport: browser extensions need a
+    simple request/response API, while MCP clients continue to use /mcp.
+    """
+    server_version = "OpenBridgeLocal/0.1"
+
+    def log_message(self, _format: str, *_args: Any) -> None:
+        # Do not log request bodies, bearer tokens, or AI-generated code.
+        return
+
+    def _send(self, status: int, payload: dict[str, Any]) -> None:
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _authorized(self) -> bool:
+        token = os.getenv("OPENBRIDGE_ADAPTER_TOKEN", "")
+        supplied = self.headers.get("Authorization", "")
+        return len(token) >= 32 and supplied == f"Bearer {token}"
+
+    def do_GET(self) -> None:
+        if not self._authorized():
+            self._send(401, {"ok": False, "error": "UNAUTHORIZED", "message": "Set the same local connection token in OpenBridge settings and the launcher."})
+            return
+        if self.path != "/v1/status":
+            self._send(404, {"ok": False, "error": "NOT_FOUND"})
+            return
+        adapter = _godot_request("/health")
+        self._send(200, {
+            "ok": True,
+            "service": "OpenBridge Browser Gateway",
+            "mcp_endpoint": f"http://{HOST}:{PORT}/mcp",
+            "godot_connected": bool(adapter.get("ok") and adapter.get("data", {}).get("ok", True)),
+            "godot": adapter.get("data", {}) if adapter.get("ok") else {"error": adapter.get("error", "ADAPTER_DISCONNECTED")},
+            "write_policy": "Godot editor session toggle is still required for script writes."
+        })
+
+    def do_POST(self) -> None:
+        if not self._authorized():
+            self._send(401, {"ok": False, "error": "UNAUTHORIZED"})
+            return
+        if self.path not in {"/v1/script/validate", "/v1/script/preview", "/v1/script/apply"}:
+            self._send(404, {"ok": False, "error": "NOT_FOUND"})
+            return
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            self._send(400, {"ok": False, "error": "INVALID_CONTENT_LENGTH"})
+            return
+        if length <= 0 or length > MAX_SCRIPT_BYTES + 8192:
+            self._send(413, {"ok": False, "error": "REQUEST_TOO_LARGE"})
+            return
+        try:
+            payload = json.loads(self.rfile.read(length).decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            self._send(400, {"ok": False, "error": "INVALID_JSON"})
+            return
+        if not isinstance(payload, dict):
+            self._send(400, {"ok": False, "error": "INVALID_PAYLOAD"})
+            return
+        content = payload.get("content", "")
+        path = payload.get("path", "")
+        if self.path == "/v1/script/validate":
+            validated = _validate_script_patch("validation.gd", content, "create")
+            if not validated["valid"]:
+                self._send(400, {"ok": False, "error": "INVALID_SCRIPT_CONTENT", "details": validated["errors"]})
+                return
+            result = _godot_request("/script/validate", method="POST", payload={"content": content})
+            self._send(200 if result.get("ok") else 502, result.get("data", result))
+            return
+        if not isinstance(path, str) or not path.strip() or not isinstance(content, str):
+            self._send(400, {"ok": False, "error": "INVALID_ARGUMENT"})
+            return
+        if self.path == "/v1/script/preview":
+            # Read first to establish whether this is a create or an update.
+            current = _godot_request("/script/read", method="POST", payload={"path": path})
+            if current.get("ok") and current.get("data", {}).get("content") is not None:
+                operation = "update"
+                expected = current["data"].get("sha256", "")
+            elif current.get("error") == "ADAPTER_HTTP_ERROR" or current.get("status") == 404:
+                operation = "create"
+                expected = None
+            else:
+                # Adapter wraps HTTP failures; 404 is surfaced in status.
+                detail = current.get("detail", {})
+                if current.get("status") == 404 or detail.get("status") == 404:
+                    operation, expected = "create", None
+                else:
+                    self._send(502, {"ok": False, "error": current.get("error", "GODOT_DISCONNECTED"), "detail": current})
+                    return
+            validated = _validate_script_patch(path, content, operation, expected)
+            if not validated["valid"]:
+                self._send(400, {"ok": False, "error": "INVALID_SCRIPT_PATCH", "details": validated["errors"]})
+                return
+            parsed = _godot_request("/script/validate", method="POST", payload={"content": content})
+            if not parsed.get("ok"):
+                self._send(502, parsed)
+                return
+            self._send(200, {
+                "ok": bool(parsed.get("data", {}).get("valid", False)),
+                "path": path,
+                "operation": operation,
+                "expected_sha256": expected,
+                "parser": parsed.get("data", {}),
+                "preview": "No file has been changed.",
+                "requires_godot_write_toggle": True
+            })
+            return
+        operation = payload.get("operation")
+        expected = payload.get("expected_sha256")
+        validated = _validate_script_patch(path, content, operation, expected)
+        if not validated["valid"]:
+            self._send(400, {"ok": False, "error": "INVALID_SCRIPT_PATCH", "details": validated["errors"]})
+            return
+        result = _godot_request("/script/apply", method="POST", payload={
+            "path": path, "content": content, "operation": operation,
+            "expected_sha256": expected or ""
+        })
+        self._send(200 if result.get("ok") else 502, result.get("data", result))
+
+
+def _start_browser_gateway() -> None:
+    """Start the authenticated extension API on loopback, next to MCP."""
+    from http.server import ThreadingHTTPServer
+    gateway_port = int(os.getenv("OPENBRIDGE_BROWSER_PORT", "8767"))
+    gateway = ThreadingHTTPServer(("127.0.0.1", gateway_port), _BrowserGatewayHandler)
+    gateway.daemon_threads = True
+    import threading
+    thread = threading.Thread(target=gateway.serve_forever, name="openbridge-browser-gateway", daemon=True)
+    thread.start()
+    print(f"OpenBridge browser gateway listening on http://127.0.0.1:{gateway_port}")
+
 def main() -> None:
     """Start the local MCP Streamable HTTP server."""
     print(f"OpenBridge {__version__} starting at http://{HOST}:{PORT}/mcp")
     print("Read-only Godot tools require the editor plugin and OPENBRIDGE_ADAPTER_TOKEN.")
+    try:
+        _start_browser_gateway()
+    except OSError as exc:
+        print(f"Browser gateway could not start: {exc}")
     mcp.run(transport="streamable-http")
 
 
