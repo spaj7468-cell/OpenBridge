@@ -39,7 +39,7 @@ Godot scripts can perform powerful project-level operations, so do not claim GDS
 The runtime and editor plugin need a reviewed localhost protocol with authenticated sessions, origin checks, message-size limits, timeouts, and disconnect handling. Loopback binding alone is not sufficient authentication. Do not advertise an authenticated bridge until the implementation and tests exist.
 
 ### Browser adapter
-The extension remains a separate future component. It should use minimum permissions, active-tab/user-triggered access, and explicit origins. It is not required for the first useful Godot agent milestone.
+The extension currently offers user-triggered active-tab title/URL capture and copy with Manifest V3 and minimal permissions. It does not read page contents, contact the MCP endpoint, or execute browser actions yet. Full browser-to-agent integration remains separate and should use minimum permissions, user-triggered access, and explicit origins.
 
 ### AI provider adapter
 DeepSeek is a possible first provider, but tool schemas should remain model-independent. Keep API credentials in a trusted local configuration or environment and never bundle them into the extension or a Godot project.
