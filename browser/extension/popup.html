@@ -5,26 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>OpenBridge</title>
   <link rel="stylesheet" href="popup.css">
+  <script src="popup.js" defer></script>
 </head>
 <body>
   <main class="panel">
     <div class="brand-mark" aria-hidden="true">OB</div>
     <p class="eyebrow">OURI · LOCAL TOOL BRIDGE</p>
     <h1>OpenBridge</h1>
-    <p class="intro">Connect AI workflows to supported tools without writing scripts by hand.</p>
-    <div class="status" role="status">
+    <p class="intro">A small, user-controlled helper for passing the current tab's context into your AI workflow.</p>
+    <div class="status" role="status" aria-live="polite">
       <span class="status-dot" aria-hidden="true"></span>
       <div>
-        <strong>Foundation build</strong>
-        <p>Browser actions are not enabled yet.</p>
+        <strong id="status-title">Ready</strong>
+        <p id="status-text">Capture is started only when you press the button.</p>
       </div>
     </div>
     <section>
-      <h2>Local MCP endpoint</h2>
-      <code>http://127.0.0.1:8765/mcp</code>
-      <p class="hint">This extension does not contact the endpoint in this build and requests no website permissions.</p>
+      <h2>Current tab</h2>
+      <p id="tab-title" class="tab-title">No tab captured</p>
+      <code id="tab-url">The page URL will appear here.</code>
+      <button id="capture-tab" type="button">Capture current tab</button>
+      <button id="copy-context" type="button" disabled>Copy tab context</button>
+      <p id="feedback" class="hint" role="status" aria-live="polite">Only the active tab's title and URL are collected. Page contents are not read.</p>
     </section>
-    <footer>Privacy-first by design · OpenBridge 0.1.0</footer>
+    <section>
+      <h2>Agent connection</h2>
+      <code>http://127.0.0.1:8765/mcp</code>
+      <p class="hint">This extension does not yet invoke OpenBridge MCP tools or control websites. Full browser-to-agent integration is a separate milestone.</p>
+    </section>
+    <footer>Minimal permissions · User-triggered only · OpenBridge 0.1.0</footer>
   </main>
 </body>
 </html>
