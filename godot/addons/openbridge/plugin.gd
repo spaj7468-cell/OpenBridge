@@ -12,12 +12,12 @@ func _enter_tree() -> void:
 	_panel.custom_minimum_size = Vector2(260, 120)
 
 	var title := Label.new()
-	title.text = "OpenBridge"
+	title.text = "OpenBridge — Godot Agent"
 	title.add_theme_font_size_override("font_size", 18)
 	_panel.add_child(title)
 
 	var subtitle := Label.new()
-	subtitle.text = "Zero-script editor bridge"
+	subtitle.text = "AI agent for Godot • GDScript + scenes"
 	_panel.add_child(subtitle)
 
 	var endpoint := Label.new()
@@ -26,13 +26,13 @@ func _enter_tree() -> void:
 	_panel.add_child(endpoint)
 
 	var status := Label.new()
-	status.text = "Status: integration scaffold"
+	status.text = "Status: adapter not connected"
 	status.add_theme_color_override("font_color", Color(0.85, 0.72, 0.35))
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_panel.add_child(status)
 
 	var note := Label.new()
-	note.text = "Scene inspection and creation will be enabled after the local adapter protocol is implemented. This panel does not change project files."
+	note.text = "Target workflow: inspect project → generate/edit GDScript → preview changes → validate → run and debug. The current build is UI-only: no editor connection, script writes, scene edits, or play-testing yet."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_panel.add_child(note)
 
