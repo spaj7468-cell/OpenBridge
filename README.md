@@ -3,79 +3,91 @@
 **Zero-script creation bridge for Godot, websites, and AI tools.**  
 Part of the **OuRi** ecosystem.
 
-OpenBridge is planned as a local-first integration layer that lets an AI host work with supported tools through MCP, while users control the workflow through extensions and editor plugins instead of writing scripts by hand.
+OpenBridge is a local-first MCP project that aims to let AI clients work with Godot and browser tools without requiring users to write GDScript or JavaScript for supported tasks. The user describes the result; OpenBridge validates a structured plan, previews changes, and only then applies approved actions.
 
-> **Project status: foundation / early development.** The repository is being prepared. Do not treat the planned integrations below as released or production-ready until their implementation and compatibility are tested.
+> **Status: early prototype.** The MCP runtime and data-only scene-spec validator are present. The Godot plugin and browser extension are initial UI scaffolds; they do not yet create scenes or manipulate websites. DeepSeek integration and the complete adapter bridge are planned, not shipped.
 
-## The idea
+## What OpenBridge is
 
-One local runtime, several adapters:
+- **MCP server:** provides typed tools to an MCP-compatible host.
+- **Godot editor plugin:** planned editor-side adapter for inspecting and building scenes with structured operations.
+- **Browser extension:** planned user-controlled adapter for supported browser workflows.
+- **DeepSeek workflow:** planned AI setup and structured scene planning, with provider credentials kept outside the repository.
+- **Quick launcher:** scripts create a local Python environment and start the MCP server.
+- **Zero-script experience:** users should not have to author scripts for supported operations. OpenBridge itself still contains implementation code.
 
-- **MCP server** — exposes explicitly supported actions to MCP-compatible AI clients.
-- **Godot editor plugin** — a structured, allow-listed bridge for creating and editing scenes, nodes, resources, and project metadata.
-- **Browser extension** — a user-controlled bridge for supported website workflows and development tasks.
-- **AI provider adapter** — DeepSeek first in the planned roadmap, with provider settings kept separate from the core runtime.
-- **Quick launcher** — one command starts the local service and reports its status.
-- **Zero-script workflow** — users choose actions, describe a result, review a plan, and approve changes. OpenBridge should generate structured editor operations rather than ask users to write GDScript or JavaScript.
-
-## Planned architecture
+## Architecture
 
 ```text
-MCP-compatible AI client
-          |
-          v
-   OpenBridge MCP server
-          |
-   permission + validation
-          |
-     local adapters
-       /       \
-      v         v
- Godot plugin  Browser extension
-      |         |
-      v         v
- Godot editor  Allowed browser actions
+MCP-compatible AI host
+        |
+        v
+ OpenBridge MCP runtime
+        |
+  schema validation + policy
+        |
+  approved adapter bridge
+     /             \
+    v               v
+Godot editor     Browser extension
+    |               |
+structured scene   user-approved
+operations         browser actions
 ```
 
-The AI provider is configured by the user in the compatible client or an optional provider adapter. OpenBridge must not silently upload project files, expose arbitrary local files, or execute arbitrary code.
+The runtime is designed to bind to loopback by default. It must not silently upload project files, expose arbitrary local files, or execute arbitrary generated code.
 
-## Planned capabilities
+## Current implementation
 
-| Area | Goal |
+| Component | Status |
 |---|---|
-| Godot | Create scenes and nodes, edit safe properties, attach resources, inspect the scene tree, run checks |
-| Websites | Inspect the current page when explicitly permitted, assist with supported UI and development workflows |
-| MCP | Typed tools, clear schemas, predictable errors, capability discovery |
-| AI | DeepSeek-first setup guide; provider-independent tool interface |
-| Launcher | One-command startup, health check, readable logs |
-| Safety | Local binding, explicit permissions, action preview, confirmation for destructive changes |
-
-## Repository map
-
-- `docs/ARCHITECTURE.md` — components and communication boundaries
-- `docs/ROADMAP.md` — milestones and acceptance criteria
-- `docs/SECURITY.md` — threat model and safety requirements
-- `docs/ZERO_SCRIPT_WORKFLOW.md` — how the no-manual-scripting experience should work
-- `docs/COMPATIBILITY.md` — planned host/editor/browser support
-- `docs/PROTOCOL.md` — MCP tools and adapter contract
-- `server/` — MCP runtime
-- `godot/addons/openbridge/` — Godot editor plugin
-- `browser/` — browser extension
-- `tests/` — automated checks
+| MCP runtime with Streamable HTTP | Initial prototype |
+| Runtime status and capability tools | Implemented in prototype |
+| Data-only scene specification validator | Implemented; no project mutation |
+| Windows and Unix-like launch scripts | Added; clean-install verification pending |
+| Godot editor plugin | UI scaffold only |
+| Browser extension | Popup scaffold; requests no website permissions |
+| DeepSeek API integration | Planned |
+| Godot scene creation / browser actions | Not implemented yet |
 
 ## Quick start
 
-The launcher and adapters are not implemented yet. For now, follow the [roadmap](docs/ROADMAP.md) to see what is planned and what is not yet available. A working quick-start command will be documented here only after it has been tested from a clean checkout.
+See [Quick start](docs/QUICKSTART.md).
+
+- Windows: run `start-openbridge.bat`.
+- Linux/macOS: run `sh ./start-openbridge.sh`.
+- Configure an MCP-compatible host to use `http://127.0.0.1:8765/mcp` with Streamable HTTP transport.
+
+The first launch requires Python 3.10+ and internet access to install dependencies. Do not expose the local server to a public network. The current prototype is not a finished Godot/browser bridge.
+
+## Example: structured scene description
+
+See [the example JSON](examples/scene-specs/simple-2d-scene.json). The validator checks a bounded data-only format; it does not yet apply the scene to Godot or guarantee that every node/property combination is valid in the target editor.
+
+## Repository map
+
+- [Quick start](docs/QUICKSTART.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [MCP and adapter contract](docs/PROTOCOL.md)
+- [Zero-script workflow](docs/ZERO_SCRIPT_WORKFLOW.md)
+- [Security requirements](docs/SECURITY.md)
+- [Compatibility policy](docs/COMPATIBILITY.md)
+- [Roadmap](docs/ROADMAP.md)
+- `server/openbridge/` — MCP runtime
+- `godot/addons/openbridge/` — Godot editor plugin scaffold
+- `browser/extension/` — browser extension scaffold
+- `examples/scene-specs/` — data-only scene examples
+- `tests/` — automated tests
 
 ## Design principles
 
-1. **No scripts required from the user.** Internal implementation code is still necessary and is maintained by the project.
-2. **Local-first.** Bind local services to loopback by default.
-3. **Explicit capabilities.** Every tool has a narrow schema and a documented effect.
-4. **Preview before mutation.** Show the proposed scene/page changes before applying them where feasible.
-5. **No hidden execution.** No arbitrary shell commands or generated script execution as a shortcut.
-6. **Honest status.** Mark features as planned, experimental, tested, or stable.
-7. **Open and auditable.** Document dependencies, permissions, and network behavior.
+1. **No scripts required from the user** for supported workflows.
+2. **Local-first:** bind local services to loopback by default.
+3. **Explicit capabilities:** every tool has a narrow schema and documented side effects.
+4. **Preview before mutation:** show intended changes before applying them.
+5. **No hidden execution:** no arbitrary shell commands or generated scripts as a shortcut.
+6. **Honest status:** distinguish planned, experimental, tested, and stable features.
+7. **Open and auditable:** document dependencies, permissions, and network behavior.
 
 ## Contributing
 
@@ -83,4 +95,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Please report security issues privately 
 
 ## License
 
-License selection is still pending. Until a license is added, do not assume that the code is available for unrestricted reuse.
+A license has not yet been selected. Until one is added, do not assume that the code is available for unrestricted reuse.
