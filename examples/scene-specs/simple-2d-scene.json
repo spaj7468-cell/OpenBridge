@@ -1,0 +1,19 @@
+{
+  "format": "openbridge.scene/v1",
+  "root": {
+    "name": "Main",
+    "type": "Node2D",
+    "children": [
+      {
+        "name": "Player",
+        "type": "CharacterBody2D",
+        "properties": {
+          "position": { "x": 160, "y": 120 }
+        },
+        "children": [
+          { "name": "Camera", "type": "Camera2D" }
+        ]
+      }
+    ]
+  }
+}
