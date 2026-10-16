@@ -38,7 +38,10 @@ jobs:
         with:
           node-version: "22"
       - name: Validate extension JavaScript syntax
-        run: node --check browser/extension/popup.js
+        run: |
+          node --check browser/extension/popup.js
+          node --check browser/extension/background.js
+          node --check browser/extension/content.js
       - name: Validate manifest and least-privilege permissions
         run: |
           python - <<'PY'
@@ -48,12 +51,16 @@ jobs:
           root = Path("browser/extension")
           manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
           assert manifest["manifest_version"] == 3
-          assert set(manifest.get("permissions", [])) == {"activeTab", "clipboardWrite"}
-          assert not manifest.get("host_permissions")
+          assert set(manifest.get("permissions", [])) == {"activeTab", "storage", "clipboardWrite"}
+          assert manifest.get("host_permissions") == ["http://127.0.0.1:8767/*"]
+          assert manifest["background"]["service_worker"] == "background.js"
+          assert any("deepseek" in pattern for item in manifest["content_scripts"] for pattern in item["matches"])
           assert (root / manifest["action"]["default_popup"]).is_file()
           html = (root / manifest["action"]["default_popup"]).read_text(encoding="utf-8")
           assert 'src="popup.js"' in html
           assert (root / "popup.js").is_file()
+          assert (root / "background.js").is_file()
+          assert (root / "content.js").is_file()
           print("Browser extension manifest and local assets are valid.")
           PY
 
