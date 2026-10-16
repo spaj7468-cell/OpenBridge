@@ -1,39 +1,4 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>OpenBridge</title>
-  <link rel="stylesheet" href="popup.css">
-  <script src="popup.js" defer></script>
-</head>
-<body>
-  <main class="panel">
-    <div class="brand-mark" aria-hidden="true">OB</div>
-    <p class="eyebrow">OURI · LOCAL TOOL BRIDGE</p>
-    <h1>OpenBridge</h1>
-    <p class="intro">A small, user-controlled helper for passing the current tab's context into your AI workflow.</p>
-    <div class="status" role="status" aria-live="polite">
-      <span class="status-dot" aria-hidden="true"></span>
-      <div>
-        <strong id="status-title">Ready</strong>
-        <p id="status-text">Capture is started only when you press the button.</p>
-      </div>
-    </div>
-    <section>
-      <h2>Current tab</h2>
-      <p id="tab-title" class="tab-title">No tab captured</p>
-      <code id="tab-url">The page URL will appear here.</code>
-      <button id="capture-tab" type="button">Capture current tab</button>
-      <button id="copy-context" type="button" disabled>Copy tab context</button>
-      <p id="feedback" class="hint" role="status" aria-live="polite">Only the active tab's title and URL are collected. Page contents are not read.</p>
-    </section>
-    <section>
-      <h2>Agent connection</h2>
-      <code>http://127.0.0.1:8765/mcp</code>
-      <p class="hint">This extension does not yet invoke OpenBridge MCP tools or control websites. Full browser-to-agent integration is a separate milestone.</p>
-    </section>
-    <footer>Minimal permissions · User-triggered only · OpenBridge 0.1.0</footer>
-  </main>
-</body>
-</html>
+<html lang="ru">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>OpenBridge</title><link rel="stylesheet" href="popup.css"><script src="popup.js" defer></script></head>
+<body><main class="panel"><div class="top"><div class="brand-mark">OB</div><div><p class="eyebrow">OURI · LOCAL AI BRIDGE</p><h1>OpenBridge</h1></div></div><p class="intro">Пиши задачу в браузерном ИИ — передавай предложенный GDScript в Godot с проверкой и подтверждением.</p><div class="status" id="status-card" role="status" aria-live="polite"><span class="status-icon" id="status-icon">●</span><div><strong id="status-title">Не подключено</strong><p id="status-text">Укажи локальный токен и проверь MCP-сервер.</p></div></div><label for="token">Локальный токен OpenBridge</label><input id="token" type="password" autocomplete="off" placeholder="Тот же OPENBRIDGE_ADAPTER_TOKEN"><p class="hint">Токен хранится локально в настройках расширения. Не вставляй его в чат с ИИ.</p><button id="save-token" type="button">Сохранить токен</button><button id="check-connection" class="secondary" type="button">Проверить соединение</button><div class="divider"></div><div class="endpoint"><span class="dot"></span><div><strong>Локальный шлюз</strong><code>127.0.0.1:8767</code></div></div><p class="hint">Godot должен быть открыт с включённым плагином OpenBridge. Для записи скриптов также требуется включить разрешение записи в панели плагина.</p><footer>Manifest V3 · Только по действию пользователя · OpenBridge 0.2.0</footer></main></body></html>
