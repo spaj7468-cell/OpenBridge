@@ -8,6 +8,8 @@ A roadmap item is complete only when the acceptance criteria have been tested in
 - [x] Define product positioning and system boundaries.
 - [x] Add initial MCP runtime, data-only scene-spec validator, sample spec, and tests.
 - [x] Add initial Godot editor-panel scaffold and browser popup scaffold.
+- [x] Implement authenticated loopback read-only adapter endpoints for editor info, scene tree, and script reading.
+- [x] Expose read-only Godot info/tree/script tools through MCP.
 - [x] Add CI workflow definition.
 - [ ] Select and add a license.
 - [ ] Confirm the latest CI workflow passes.
@@ -39,7 +41,8 @@ A roadmap item is complete only when the acceptance criteria have been tested in
 - **Acceptance:** a test project can be changed from structured plans, invalid input causes no mutation, and recovery is demonstrated.
 
 ## M4 — GDScript agent (core ZeroScript parity)
-- [ ] Add tools to read a selected script and retrieve relevant surrounding context.
+- [x] Add a read-only tool to read a selected project-relative script.
+- [ ] Add relevant surrounding context and editor diagnostics.
 - [ ] Create a new GDScript file from an AI-produced patch.
 - [ ] Edit existing scripts using unified diffs or structured patch operations.
 - [ ] Validate paths and prevent edits outside the selected project.
