@@ -8,7 +8,7 @@
 2. Double-click **start-openbridge.bat**.
 3. If you want the launcher to start Godot too, paste the folder path of your Godot project when prompted. If Godot is not on PATH, provide the Godot 4 executable path.
 4. The launcher creates a local token once, stores it under **%LOCALAPPDATA%\\OpenBridge\\adapter-token.txt**, copies it to the clipboard when supported, and starts the MCP and browser gateway services.
-5. Install the **godot/addons/openbridge** folder into your game's **addons/openbridge** folder, enable **OpenBridge** under **Project → Project Settings → Plugins**, and keep the launcher window open.
+5. If you supplied a project path, the launcher copies the OpenBridge add-on into that project when it is not already installed. In Godot, enable **OpenBridge** under **Project → Project Settings → Plugins** once, and keep the launcher window open.
 6. Install the browser extension by opening **chrome://extensions**, enabling Developer mode, choosing **Load unpacked**, and selecting **browser/extension**.
 7. Open a supported AI website (initial best-effort support: DeepSeek, ChatGPT, Claude, Gemini, Perplexity, Qwen, Kimi, Poe). Open the extension popup, paste the local token, save it, and check connection.
 
