@@ -22,8 +22,8 @@ func _enter_tree() -> void:
 	_build_panel()
 	_bridge_port = _read_port_setting()
 	_bridge_token = OS.get_environment("OPENBRIDGE_ADAPTER_TOKEN").strip_edges()
-	if _bridge_token.is_empty():
-		_set_status("Adapter stopped: set OPENBRIDGE_ADAPTER_TOKEN in the editor environment.")
+	if _bridge_token.length() < 32:
+		_set_status("Adapter stopped: set a random OPENBRIDGE_ADAPTER_TOKEN with at least 32 characters.")
 	else:
 		var err := _tcp_server.listen(_bridge_port, "127.0.0.1")
 		if err == OK:
@@ -145,8 +145,8 @@ func _on_write_toggle(enabled: bool) -> void:
 func _refresh_status() -> void:
 	if _bridge_started:
 		_set_status("Bridge listening on 127.0.0.1:%d" % _bridge_port)
-	elif _bridge_token.is_empty():
-		_set_status("Adapter stopped: set OPENBRIDGE_ADAPTER_TOKEN in the editor environment.")
+	elif _bridge_token.length() < 32:
+		_set_status("Adapter stopped: OPENBRIDGE_ADAPTER_TOKEN must contain at least 32 characters.")
 	else:
 		_set_status("Adapter not listening. Check port %d." % _bridge_port)
 
