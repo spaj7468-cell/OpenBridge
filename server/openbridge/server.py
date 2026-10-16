@@ -19,6 +19,8 @@ from openbridge import __version__
 HOST = os.getenv("OPENBRIDGE_HOST", "127.0.0.1")
 PORT = int(os.getenv("OPENBRIDGE_PORT", "8765"))
 GODOT_BRIDGE_URL = os.getenv("OPENBRIDGE_GODOT_HEALTH_URL", "http://127.0.0.1:8766/health")
+GODOT_BRIDGE_BASE_URL = os.getenv("OPENBRIDGE_GODOT_URL", "http://127.0.0.1:8766").rstrip("/")
+GODOT_BRIDGE_TOKEN = os.getenv("OPENBRIDGE_ADAPTER_TOKEN", "")
 MAX_SCENE_NODES = 200
 MAX_TREE_DEPTH = 20
 MAX_SCRIPT_BYTES = 128 * 1024
@@ -42,6 +44,58 @@ _ALLOWED_PROPERTIES = {
     "offset_left", "offset_top", "offset_right", "offset_bottom",
     "text", "modulate", "self_modulate", "size",
 }
+
+
+
+
+def _godot_request(path: str, method: str = "GET", payload: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Call the loopback Godot editor adapter with a shared bearer token."""
+    if not GODOT_BRIDGE_TOKEN:
+        return {
+            "ok": False,
+            "error": "ADAPTER_TOKEN_MISSING",
+            "message": "Set OPENBRIDGE_ADAPTER_TOKEN in the environment used to start both Godot and OpenBridge.",
+        }
+    if not path.startswith("/") or ".." in path.split("/"):
+        return {"ok": False, "error": "INVALID_ADAPTER_PATH"}
+    body = json.dumps(payload).encode("utf-8") if payload is not None else None
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {GODOT_BRIDGE_TOKEN}",
+    }
+    if body is not None:
+        headers["Content-Type"] = "application/json"
+    request = urllib.request.Request(
+        GODOT_BRIDGE_BASE_URL + path,
+        data=body,
+        headers=headers,
+        method=method,
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=3.0) as response:
+            raw = response.read(262_144).decode("utf-8", errors="replace")
+            data = json.loads(raw)
+            if not isinstance(data, dict):
+                return {"ok": False, "error": "INVALID_ADAPTER_RESPONSE"}
+            return {"ok": True, "data": data}
+    except urllib.error.HTTPError as exc:
+        try:
+            detail = json.loads(exc.read(16_384).decode("utf-8", errors="replace"))
+        except (json.JSONDecodeError, OSError):
+            detail = {}
+        return {
+            "ok": False,
+            "error": str(detail.get("error", "ADAPTER_HTTP_ERROR")),
+            "status": exc.code,
+            "detail": detail,
+        }
+    except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
+        return {
+            "ok": False,
+            "error": "ADAPTER_DISCONNECTED",
+            "message": "Could not reach the local Godot editor adapter.",
+            "detail": type(exc).__name__,
+        }
 
 
 def _validate_scene_spec(scene_spec: dict[str, Any]) -> dict[str, Any]:
@@ -206,13 +260,14 @@ def openbridge_capabilities() -> dict[str, Any]:
             "runtime status",
             "capability discovery",
             "Godot adapter health probe",
+            "authenticated read-only Godot editor info and scene-tree inspection",
+            "read-only project-relative GDScript inspection",
             "bounded data-only scene specification validation",
             "GDScript patch-envelope validation (no file writes or execution)",
         ],
         "planned": [
-            "authenticated Godot editor bridge and scene-tree inspection",
             "approved scene creation and property editing",
-            "GDScript file reading, diff preview, application, and Godot parser validation",
+            "GDScript diff preview, approved application, and Godot parser validation",
             "project run/playtest and debugger feedback loop",
             "browser extension",
             "DeepSeek-guided plan/preview/apply/verify workflow",
@@ -244,6 +299,32 @@ def godot_adapter_status() -> dict[str, Any]:
 
 
 @mcp.tool()
+def godot_get_editor_info() -> dict[str, Any]:
+    """Get version and active-scene information from a connected Godot editor."""
+    result = _godot_request("/editor_info")
+    return result["data"] if result["ok"] else result
+
+
+@mcp.tool()
+def godot_get_scene_tree() -> dict[str, Any]:
+    """Inspect a bounded summary of the active scene in the connected Godot editor."""
+    result = _godot_request("/scene_tree")
+    return result["data"] if result["ok"] else result
+
+
+@mcp.tool()
+def godot_read_script(path: str) -> dict[str, Any]:
+    """Read a project-relative .gd file from the selected Godot project; never writes or executes it."""
+    if not isinstance(path, str) or not path.strip():
+        return {"ok": False, "error": "INVALID_SCRIPT_PATH"}
+    validated = _validate_script_patch(path, "# read-only path validation", "create")
+    if not validated["valid"]:
+        return {"ok": False, "error": "INVALID_SCRIPT_PATH", "details": validated["errors"]}
+    result = _godot_request("/script/read", method="POST", payload={"path": path})
+    return result["data"] if result["ok"] else result
+
+
+@mcp.tool()
 def godot_validate_scene_spec(scene_spec: dict[str, Any]) -> dict[str, Any]:
     """Validate a data-only Godot scene tree proposal without executing scripts or editing files.
 
@@ -256,7 +337,7 @@ def godot_validate_scene_spec(scene_spec: dict[str, Any]) -> dict[str, Any]:
 def main() -> None:
     """Start the local MCP Streamable HTTP server."""
     print(f"OpenBridge {__version__} starting at http://{HOST}:{PORT}/mcp")
-    print("This foundation build does not yet mutate Godot projects.")
+    print("Read-only Godot tools require the editor plugin and OPENBRIDGE_ADAPTER_TOKEN.")
     mcp.run(transport="streamable-http")
 
 
