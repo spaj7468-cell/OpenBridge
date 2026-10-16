@@ -19,17 +19,20 @@ A roadmap item is complete only when the acceptance criteria have been tested in
 - [x] Add bounded scene-spec validation.
 - [x] Add quick launch scripts.
 - [ ] Verify clean installation and MCP handshake.
-- [ ] Implement authenticated local adapter sessions and origin checks.
-- [ ] Add request limits, timeouts, disconnect handling, and security tests.
+- [x] Implement a shared bearer-token authenticated loopback adapter.
+- [x] Add request size and timeout bounds plus disconnect handling.
+- [ ] Add dedicated request/response integration and authorization tests.
 - **Acceptance:** a clean checkout starts locally, exposes only loopback by default, and handles connection failures clearly.
 
 ## M2 — Godot read-only agent
 - [x] Add Godot editor plugin UI scaffold.
-- [ ] Connect plugin to the local bridge with an authenticated session.
-- [ ] Report Godot version, project path (redacted where appropriate), active scene, and plugin version.
-- [ ] Inspect bounded scene trees and relevant project files.
-- [ ] Read selected GDScript files and surface parser/runtime errors.
-- [ ] Add connection status, logs, cancellation, and useful diagnostics.
+- [x] Connect plugin to the local bridge with a shared bearer token.
+- [x] Report Godot version, project name, and active scene.
+- [x] Inspect a bounded active scene tree.
+- [x] Read selected project-relative GDScript files.
+- [x] Add session-only opt-in for script writes and backup on update.
+- [ ] Validate GDScript with Godot's parser and surface parser/runtime errors.
+- [ ] Verify plugin manually on supported Godot 4 versions; add connection diagnostics and cancellation.
 - **Acceptance:** the agent can inspect an open Godot project without changing it and can return accurate editor data.
 
 ## M3 — Scene and resource editing
@@ -43,12 +46,12 @@ A roadmap item is complete only when the acceptance criteria have been tested in
 ## M4 — GDScript agent (core ZeroScript parity)
 - [x] Add a read-only tool to read a selected project-relative script.
 - [ ] Add relevant surrounding context and editor diagnostics.
-- [ ] Create a new GDScript file from an AI-produced patch.
-- [ ] Edit existing scripts using unified diffs or structured patch operations.
-- [ ] Validate paths and prevent edits outside the selected project.
-- [ ] Run Godot's parser/editor validation and return precise diagnostics.
-- [ ] Show the complete diff and require confirmation for applying edits.
-- [ ] Keep script writing separate from running scripts or launching the project.
+- [x] Create a new GDScript file from an AI-produced patch.
+- [x] Update existing scripts through guarded editor adapter operations.
+- [x] Validate project-relative paths, payload limits, and expected original hash.
+- [x] Keep script writes disabled by default behind a session-only editor toggle.
+- [x] Back up existing files before updates and keep writing separate from execution.
+- [ ] Add Godot parser validation and a proper diff viewer/per-patch approval dialog.
 - **Acceptance:** the agent can preview and apply a small gameplay script, show recoverable changes, pass parser validation, and report errors honestly. Current write/preview operations are implemented in the prototype; parser validation and Godot manual verification remain open.
 
 ## M5 — Run, test, and repair loop
@@ -76,8 +79,9 @@ A roadmap item is complete only when the acceptance criteria have been tested in
 - **Acceptance:** a supported host can complete a bounded task through real tool calls and verify the result in Godot.
 
 ## M8 — Browser extension and release quality
-- [ ] Define supported browser targets and minimal permissions.
-- [ ] Add a user-triggered connection to OpenBridge.
+- [x] Define a Manifest V3 browser extension with minimal activeTab/clipboard permissions.
+- [x] Add user-triggered active-tab title/URL capture and copy.
+- [ ] Add a user-triggered authenticated connection to OpenBridge and browser tool execution.
 - [ ] Test clean install, upgrade, disconnect, corrupted config, and supported OSes.
 - [ ] Publish compatibility matrix and known limitations.
 - [ ] Tag an alpha only after acceptance checks pass.
