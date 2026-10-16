@@ -15,6 +15,7 @@ OpenBridge is an early-stage local MCP runtime and planned editor/browser adapte
 - [MCP and adapter contract](PROTOCOL.md) — planned tool groups, errors, and scene-spec validation.
 - [DeepSeek integration](DEEPSEEK_INTEGRATION.md) — planned provider workflow and official references.
 - [Compatibility policy](COMPATIBILITY.md) — intended targets; support is not claimed until tested.
+- [Browser extension](../browser/extension/popup.html) — user-triggered active-tab context helper; MCP integration is not yet implemented.
 - [Contributing](../CONTRIBUTING.md) — contribution requirements.
 
 ## Security
