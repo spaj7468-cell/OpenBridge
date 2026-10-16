@@ -251,7 +251,7 @@ func _dispatch_request(request: Dictionary) -> Dictionary:
 			var proposed_content: Variant = payload.get("content", "")
 			var operation := str(payload.get("operation", ""))
 			var expected_hash := str(payload.get("expected_sha256", ""))
-			if not proposed_content is String or proposed_content.is_empty() or proposed_content.to_utf8_buffer().size() > MAX_SCRIPT_BYTES or proposed_content.contains("\\u0000"):
+			if not proposed_content is String or proposed_content.is_empty() or proposed_content.to_utf8_buffer().size() > MAX_SCRIPT_BYTES or proposed_content.to_utf8_buffer().has(0):
 				return {"status": 400, "body": {"error": "INVALID_SCRIPT_CONTENT", "limit_bytes": MAX_SCRIPT_BYTES}}
 			if operation not in ["create", "update"]:
 				return {"status": 400, "body": {"error": "INVALID_OPERATION"}}
