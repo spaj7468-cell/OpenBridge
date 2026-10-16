@@ -54,7 +54,7 @@ The local bridge binds to loopback by default. It must not silently upload proje
 | GDScript patch-envelope validator | Implemented; validates paths/size/hash metadata only |
 | Windows and Unix-like launch scripts | Added; clean-install verification pending |
 | Godot editor plugin | Authenticated local bridge, editor info, bounded scene tree, script reading, preview, opt-in script writes with backups |
-| Browser extension | User-triggered active-tab title/URL capture and copy; no page-content scraping or MCP tool execution |
+| Browser extension | Injected task panel on supported AI sites; user-triggered prompt preparation, response capture, parser preview and explicit script apply through an authenticated loopback gateway |
 | Godot editor info, bounded scene-tree inspection, script reading | Implemented in prototype; Godot manual verification pending |
 | GDScript preview and guarded file application | Implemented prototype; Godot manual verification pending |
 | Godot-native GDScript parser validation | Implemented prototype; Godot manual verification pending |
