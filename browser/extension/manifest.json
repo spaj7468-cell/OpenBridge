@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "OpenBridge — Browser AI to Godot",
-  "version": "0.2.0",
-  "description": "Connect supported browser AI chats to your local Godot project through OpenBridge.",
+  "name": "OpenBridge — ИИ в браузере для Godot",
+  "short_name": "OpenBridge",
+  "version": "0.2.1",
+  "description": "Расширение для DeepSeek, ChatGPT и других веб-ИИ: передаёт задачи и предложенный GDScript в локальный редактор Godot через OpenBridge.",
   "permissions": [
     "activeTab",
     "storage",
@@ -15,7 +16,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "OpenBridge",
+    "default_title": "OpenBridge — ИИ для Godot",
     "default_popup": "popup.html"
   },
   "content_scripts": [
