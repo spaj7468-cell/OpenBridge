@@ -56,3 +56,19 @@ jobs:
           assert (root / "popup.js").is_file()
           print("Browser extension manifest and local assets are valid.")
           PY
+
+  godot-plugin-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Download pinned Godot 4 editor
+        run: |
+          curl -fsSL -o godot.zip https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.x86_64.zip
+          unzip -q godot.zip -d godot-bin
+          chmod +x godot-bin/Godot_v4.4.1-stable_linux.x86_64
+      - name: Import and parse the Godot smoke-test project
+        env:
+          GODOT_SILENCE_ROOT_WARNING: "1"
+        run: |
+          godot-bin/Godot_v4.4.1-stable_linux.x86_64 --headless --editor --path godot --quit
