@@ -27,3 +27,32 @@ jobs:
         run: python -m compileall -q server
       - name: Run tests
         run: pytest
+
+  browser-extension-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate extension JavaScript syntax
+        run: node --check browser/extension/popup.js
+      - name: Validate manifest and least-privilege permissions
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("browser/extension")
+          manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+          assert manifest["manifest_version"] == 3
+          assert set(manifest.get("permissions", [])) == {"activeTab", "clipboardWrite"}
+          assert not manifest.get("host_permissions")
+          assert (root / manifest["action"]["default_popup"]).is_file()
+          html = (root / manifest["action"]["default_popup"]).read_text(encoding="utf-8")
+          assert 'src="popup.js"' in html
+          assert (root / "popup.js").is_file()
+          print("Browser extension manifest and local assets are valid.")
+          PY
