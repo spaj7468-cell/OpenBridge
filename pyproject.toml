@@ -9,7 +9,7 @@ description = "Local-first MCP runtime and structured editor bridge for OpenBrid
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-  "mcp>=1.0.0,<2.0.0",
+  "mcp>=1.28,<2.0.0",
 ]
 
 [project.scripts]
