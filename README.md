@@ -51,6 +51,7 @@ The local bridge binds to loopback by default. It must not silently upload proje
 | MCP runtime with Streamable HTTP | Initial prototype |
 | Runtime status and capability tools | Implemented in prototype |
 | Data-only scene specification validator | Implemented; validation only |
+| GDScript patch-envelope validator | Implemented; validates paths/size/hash metadata only |
 | Windows and Unix-like launch scripts | Added; clean-install verification pending |
 | Godot editor plugin | UI scaffold only |
 | Browser extension | Popup scaffold; requests no website permissions |
