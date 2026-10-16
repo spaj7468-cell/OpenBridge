@@ -1,70 +1,100 @@
 # MCP and adapter contract
 
-**Status:** design draft. Tool names and schemas may change before the first alpha.
+**Status:** design draft. Tool names and schemas may change before alpha. Only tools listed as implemented by the running server should be treated as available.
 
 ## Principles
 
-- Use the official Model Context Protocol specification and SDK rather than inventing a competing MCP transport.
+- Use the official Model Context Protocol and SDK.
 - Advertise only implemented capabilities.
-- Keep tools small, typed, and narrowly scoped.
-- Return machine-readable results plus concise human-readable summaries.
-- Separate read-only operations from mutating operations.
-- Validate inputs again at the adapter boundary.
+- Keep tools typed, bounded, and narrow.
+- Return structured results plus a concise summary.
+- Separate read-only, file-editing, scene-editing, and run/test operations.
+- Validate inputs at both the MCP runtime and editor adapter.
+- Treat AI-generated GDScript as supported output, but never run it silently.
+- Require evidence from the editor/process before reporting success.
 
 ## Planned tool groups
 
 ### Runtime
 - `openbridge_status` — runtime version, health, and registered adapters.
-- `openbridge_capabilities` — supported operations and adapter versions.
-- `openbridge_diagnostics` — redacted diagnostic information.
+- `openbridge_capabilities` — implemented vs planned capabilities.
+- `openbridge_diagnostics` — redacted runtime diagnostics.
 
 ### Godot read operations
-- `godot_get_editor_info` — editor version and connection state.
+- `godot_get_editor_info` — editor version, project identity, and connection state.
 - `godot_get_scene_tree` — bounded summary of the active scene.
-- `godot_list_node_types` — only node types the adapter supports.
+- `godot_list_node_types` — supported node types and compatibility information.
+- `godot_list_project_files` — bounded listing of relevant files inside the selected project.
+- `godot_read_script` — read a selected project-relative GDScript file, with size limits.
 
-### Godot mutations
-- `godot_plan_scene` — validate a structured scene description and return a proposed change plan without applying it.
-- `godot_apply_scene_plan` — apply a previously validated plan after user approval.
+### Scene/resource operations
+- `godot_plan_scene` — validate a structured scene description and return a change plan.
+- `godot_apply_scene_plan` — apply an approved, non-stale plan.
 - `godot_set_node_properties` — update allow-listed properties on known nodes.
-- `godot_save_scene` — save only to a path inside the selected project and according to the configured approval policy.
+- `godot_connect_signal` — connect a signal through editor APIs.
+- `godot_inspect_resource` — report type, path, and relevant metadata for a project resource.
+
+### GDScript authoring
+- `godot_propose_script_patch` — produce a bounded patch proposal without writing files.
+- `godot_preview_script_patch` — show the exact diff and validate target path/original file state.
+- `godot_apply_script_patch` — apply an approved patch and create a recovery copy where applicable.
+- `godot_validate_script` — ask Godot to parse/validate a script and return diagnostics.
+
+### Run and debug
+- `godot_run_project` — launch the selected project or scene after policy/approval checks.
+- `godot_stop_project` — stop a run started by OpenBridge.
+- `godot_get_debug_output` — return bounded, relevant output and errors from the current run.
+- `godot_test_status` — report process exit status and test results when available.
 
 These are planned names, not claims of current implementation.
 
 ## Error model
 
-Every error should include a stable code, a safe message, and optional non-sensitive details. Proposed categories:
-
+Every error should include a stable code, a safe message, and optional non-sensitive details. Categories:
 - `INVALID_ARGUMENT`
 - `CAPABILITY_UNAVAILABLE`
 - `ADAPTER_DISCONNECTED`
 - `PERMISSION_REQUIRED`
 - `APPROVAL_REQUIRED`
 - `RESOURCE_NOT_FOUND`
+- `STALE_PLAN`
+- `PATH_OUTSIDE_PROJECT`
+- `VALIDATION_FAILED`
 - `OPERATION_CONFLICT`
 - `TIMEOUT`
+- `CANCELLED`
 - `INTERNAL_ERROR`
 
-Do not include API keys, full environment dumps, or unfiltered browser page content in errors.
+Never include API keys, full environment dumps, or unrelated project content in errors.
+
+## Script patch contract
+
+A patch request should include:
+- project/session identifier;
+- project-relative target path;
+- expected original hash (or an explicit “new file” marker);
+- patch content and size limit;
+- a short explanation of intended behavior;
+- whether the change is create/update/delete;
+- validation and approval state.
+
+The adapter must reject path traversal, unapproved absolute paths, stale hashes, oversized patches, and writes outside the selected project. Applying a patch must return the changed path, backup/recovery location where applicable, and validation result. Running changed code is a separate tool and approval boundary.
 
 ## Scene-spec validation
 
 Before applying a scene plan, validate:
-
 1. Schema version and required fields.
-2. Allowed Godot class names and parent-child compatibility where known.
-3. Property allow-list and property value types.
-4. Node-name uniqueness and path references.
+2. Allowed Godot classes and parent-child compatibility.
+3. Property allow-list and value types.
+4. Unique node names and path references.
 5. Resource paths contained within the selected project.
-6. Maximum node count and tree depth.
-7. Whether the action is destructive or overwrites existing content.
-8. The current editor/project state has not changed since the plan was generated.
-
-A plan should be bound to a project identity and a short-lived state/version token so stale plans cannot accidentally modify a different project.
+6. Node count and tree-depth limits.
+7. Destructive changes and overwrite behavior.
+8. Current editor/project state still matches the plan token.
 
 ## Official references
 
-- [Model Context Protocol documentation](https://modelcontextprotocol.io/)
+- [Model Context Protocol](https://modelcontextprotocol.io/)
 - [MCP specification](https://modelcontextprotocol.io/specification/)
 - [Godot documentation](https://docs.godotengine.org/en/stable/)
-- [Godot EditorPlugin class](https://docs.godotengine.org/en/stable/classes/class_editorplugin.html)
+- [Godot EditorPlugin](https://docs.godotengine.org/en/stable/classes/class_editorplugin.html)
