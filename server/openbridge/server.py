@@ -265,12 +265,12 @@ def openbridge_capabilities() -> dict[str, Any]:
             "authenticated read-only Godot editor info and scene-tree inspection",
             "read-only project-relative GDScript inspection",
             "GDScript preview and opt-in file application with stale-hash checks and backups",
+            "Godot-native GDScript parser validation (not execution)",
             "bounded data-only scene specification validation",
             "GDScript patch-envelope validation (no file writes or execution)",
         ],
         "planned": [
             "approved scene creation and property editing",
-            "Godot parser validation and run/playtest feedback loop",
             "project run/playtest and debugger feedback loop",
             "authenticated browser-to-agent tool execution",
             "DeepSeek provider and iterative plan/preview/apply/verify workflow",
@@ -331,6 +331,18 @@ def godot_preview_script_patch(path: str, content: str) -> dict[str, Any]:
     if not validated["valid"]:
         return {"ok": False, "error": "INVALID_SCRIPT_PATCH", "details": validated["errors"]}
     result = _godot_request("/script/preview", method="POST", payload={"path": path, "content": content})
+    return result["data"] if result["ok"] else result
+
+
+@mcp.tool()
+def godot_validate_script(content: str) -> dict[str, Any]:
+    """Ask the connected Godot editor to parse proposed GDScript without saving or executing it."""
+    if not isinstance(content, str):
+        return {"ok": False, "error": "INVALID_SCRIPT_CONTENT"}
+    validated = _validate_script_patch("validation.gd", content, "create")
+    if not validated["valid"]:
+        return {"ok": False, "error": "INVALID_SCRIPT_CONTENT", "details": validated["errors"]}
+    result = _godot_request("/script/validate", method="POST", payload={"content": content})
     return result["data"] if result["ok"] else result
 
 
