@@ -26,6 +26,8 @@ Potential risks include:
 ### Permissions and approvals
 - Separate read-only tools, file edits, scene mutations, and run/test operations.
 - Show exact script diffs and scene changes before applying.
+- Keep script writes disabled by default; require the user to enable the editor-session write toggle.
+- Require the expected SHA-256 for updates and save a backup before overwriting existing scripts.
 - Require approval for destructive operations, overwrites, deletes, execution of changed/generated code, and actions outside the selected project.
 - Provide a visible stop/disconnect control and a non-secret audit log.
 - Never claim code is safe simply because it parses.
