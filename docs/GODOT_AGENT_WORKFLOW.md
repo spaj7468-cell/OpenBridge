@@ -82,4 +82,4 @@ These are design names only, not currently implemented MCP tools:
 
 ## Current limitations
 
-The current repository has an MCP foundation, a data-only scene-spec validator, and a Godot UI scaffold. The plugin is not yet connected to the runtime and cannot currently read/write project scripts, create scenes, run a game, or collect debugger output. This document is the implementation target, not a feature checklist for a released product.
+The current prototype connects MCP to an authenticated loopback Godot adapter and supports editor info, bounded active-scene inspection, GDScript reading/preview, and opt-in script writes with stale-hash checks and backups. The adapter still cannot create scenes, validate scripts with Godot's parser, launch a game, or collect debugger output. Manual testing in Godot 4 is still required. This document describes both implemented prototype capabilities and the remaining target workflow.
