@@ -4,7 +4,8 @@ This matrix tracks targets the project intends to support. An entry is not suppo
 
 | Target | Planned support | Current status |
 |---|---|---|
-| Godot 4.x editor plugin | Scene and node operations through editor APIs | Planned |
+| Godot 4.x editor plugin | Read-only editor info, scene tree, and GDScript access | Implemented prototype; manual version testing pending |
+| Godot 4.x editor plugin | Scene/node mutation and run/debug operations | Planned |
 | MCP-compatible AI host | MCP tool discovery and invocation | Planned |
 | DeepSeek API | Provider setup and structured-output workflow where supported | Planned |
 | Microsoft Edge | Browser extension | Planned |
