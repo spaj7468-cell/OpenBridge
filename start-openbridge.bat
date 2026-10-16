@@ -67,9 +67,9 @@ if not "%GODOT_PROJECT%"=="" (
     for /f "delims=" %%G in ('where godot.exe 2^>nul') do if not defined GODOT_EXE set "GODOT_EXE=%%G"
     for /f "delims=" %%G in ('where godot 2^>nul') do if not defined GODOT_EXE set "GODOT_EXE=%%G"
     if not defined GODOT_EXE set /p "GODOT_EXE=Paste full path to Godot 4 executable: "
-    if exist "%GODOT_EXE%" (
+    if exist "!GODOT_EXE!" (
       echo [5/5] Launching Godot with the same connection token...
-      start "Godot - OpenBridge" "%GODOT_EXE%" --editor --path "%GODOT_PROJECT%"
+      start "Godot - OpenBridge" "!GODOT_EXE!" --editor --path "%GODOT_PROJECT%"
     ) else (
       echo WARNING: Godot executable not found. Start Godot from this environment to share the token.
     )
