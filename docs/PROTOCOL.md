@@ -21,6 +21,13 @@
 - `openbridge_diagnostics` — redacted runtime diagnostics.
 
 ### Godot read operations
+
+The following read-only tools are implemented in the current prototype and require the Godot add-on to be enabled with a matching `OPENBRIDGE_ADAPTER_TOKEN`:
+- `godot_get_editor_info`
+- `godot_get_scene_tree`
+- `godot_read_script`
+
+The following additional read operations are planned:
 - `godot_get_editor_info` — editor version, project identity, and connection state.
 - `godot_get_scene_tree` — bounded summary of the active scene.
 - `godot_list_node_types` — supported node types and compatibility information.
