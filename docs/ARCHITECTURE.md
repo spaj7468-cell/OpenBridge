@@ -19,7 +19,7 @@ The plugin owns editor-aware operations:
 - launch and stop a project/scene and collect relevant diagnostics;
 - return exact operation results, errors, and recovery hints.
 
-The plugin is the right place to use Godot editor APIs. File and script operations must remain inside the selected project unless the user explicitly selects another workspace.
+The plugin is the right place to use Godot editor APIs. The first adapter milestone now exposes bearer-token-authenticated loopback endpoints for health, editor info, bounded active-scene tree inspection, and reading project-relative GDScript. It does not write files or execute code yet. File and script operations must remain inside the selected project unless the user explicitly selects another workspace.
 
 ### Script authoring and execution
 AI-written GDScript is a first-class capability. Many requested features—movement, UI interaction, inventory logic, dialogue flow, save/load, and gameplay systems—cannot be implemented by node creation alone.
@@ -82,4 +82,4 @@ A scene plan and a script patch should carry a short-lived project/state token s
 
 ## 5. Initial implementation order
 
-Build a secure read-only editor connection first; then add diff-previewed GDScript editing and scene/resource operations. Add run/debug feedback as a separate milestone. Browser automation is secondary to a working Godot agent.
+The secure read-only editor connection is now implemented in the prototype. Verify it in Godot 4 before relying on it; next add diff-previewed GDScript editing and scene/resource operations. Add run/debug feedback as a separate milestone. Browser automation is secondary to a working Godot agent.
