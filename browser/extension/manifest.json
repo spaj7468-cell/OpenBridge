@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "OpenBridge — Local AI Tool Bridge",
+  "version": "0.1.0",
+  "description": "A user-controlled extension for the OpenBridge local MCP workflow. Browser actions are not enabled in this foundation build.",
+  "action": {
+    "default_title": "OpenBridge",
+    "default_popup": "popup.html"
+  }
+}
