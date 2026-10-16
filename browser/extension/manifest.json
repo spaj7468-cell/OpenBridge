@@ -1,14 +1,43 @@
 {
   "manifest_version": 3,
-  "name": "OpenBridge — Local AI Tool Bridge",
-  "version": "0.1.0",
-  "description": "User-triggered active-tab context helper for OpenBridge. Full browser-to-agent tool execution is planned.",
+  "name": "OpenBridge — Browser AI to Godot",
+  "version": "0.2.0",
+  "description": "Connect supported browser AI chats to your local Godot project through OpenBridge.",
   "permissions": [
     "activeTab",
+    "storage",
     "clipboardWrite"
   ],
+  "host_permissions": [
+    "http://127.0.0.1:8767/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_title": "OpenBridge",
     "default_popup": "popup.html"
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chat.deepseek.com/*",
+        "https://deepseek.com/*",
+        "https://www.deepseek.com/*",
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://www.perplexity.ai/*",
+        "https://chat.qwen.ai/*",
+        "https://kimi.com/*",
+        "https://www.kimi.com/*",
+        "https://poe.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
 }
