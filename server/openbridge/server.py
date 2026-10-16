@@ -50,11 +50,11 @@ _ALLOWED_PROPERTIES = {
 
 def _godot_request(path: str, method: str = "GET", payload: dict[str, Any] | None = None) -> dict[str, Any]:
     """Call the loopback Godot editor adapter with a shared bearer token."""
-    if not GODOT_BRIDGE_TOKEN:
+    if len(GODOT_BRIDGE_TOKEN) < 32:
         return {
             "ok": False,
-            "error": "ADAPTER_TOKEN_MISSING",
-            "message": "Set OPENBRIDGE_ADAPTER_TOKEN in the environment used to start both Godot and OpenBridge.",
+            "error": "ADAPTER_TOKEN_MISSING_OR_WEAK",
+            "message": "Set a random OPENBRIDGE_ADAPTER_TOKEN of at least 32 characters in the environment used to start both Godot and OpenBridge.",
         }
     if not path.startswith("/") or ".." in path.split("/"):
         return {"ok": False, "error": "INVALID_ADAPTER_PATH"}
