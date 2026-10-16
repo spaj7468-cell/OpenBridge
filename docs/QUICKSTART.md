@@ -1,6 +1,6 @@
 # Quick start
 
-**Current status:** OpenBridge has a local MCP server and an early Godot 4 EditorPlugin adapter. The adapter can report editor information, inspect the active scene tree, read/preview GDScript, and apply script changes when you explicitly enable script writes in the editor dock. It does not yet create scenes, run the game, or validate scripts with Godot's parser. Browser support currently captures the active tab title/URL; it is not yet connected to MCP tools.
+**Current status:** OpenBridge has a local MCP server and an early Godot 4 EditorPlugin adapter. The adapter can report editor information, inspect the active scene tree, read/preview GDScript, and apply script changes when you explicitly enable script writes in the editor dock. It does not yet create scenes or run the game. A Godot-native parser-validation tool is now implemented in the prototype but still needs manual Godot verification. Browser support currently captures the active tab title/URL; it is not yet connected to MCP tools.
 
 ## Requirements
 
@@ -57,6 +57,7 @@ Configure the AI host to use the Streamable HTTP MCP endpoint:
 - `godot_get_scene_tree` — bounded tree for the currently edited scene.
 - `godot_read_script` — read a project-relative `.gd` file.
 - `godot_preview_script_patch` — preview proposed script content without writing it.
+- `godot_validate_script` — ask Godot's GDScript parser to validate proposed code without saving or executing it.
 - `godot_apply_script_patch` — create or update a script after script writes are enabled in the dock. Updates require the current file's SHA-256. Existing scripts are backed up under `user://OpenBridge/backups`. This saves code but does not execute it.
 - `godot_validate_scene_spec` — validate a bounded data-only scene description.
 - `godot_validate_script_patch` — validate the shape and bounds of a proposed script patch.
