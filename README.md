@@ -71,7 +71,7 @@ See [Quick start](docs/QUICKSTART.md).
 - Configure an MCP-compatible host to use `http://127.0.0.1:8765/mcp` with Streamable HTTP transport.
 - The Godot add-on listens on `127.0.0.1:8766` by default and provides read-only inspection plus guarded GDScript file writes when enabled in the dock. See [Quick start](docs/QUICKSTART.md).
 
-The first launch requires Python 3.10+ and internet access to install dependencies. The authenticated local bridge now supports editor info, bounded scene-tree inspection, script reading, script preview, and opt-in script file writes with stale-hash checks and backups. It still needs manual verification in Godot 4. Scene mutations, parser validation, run/playtest, browser actions, and DeepSeek provider calls remain incomplete. Script writes are disabled by default and require enabling the session toggle in the Godot dock. Do not expose local services to a public network.
+The first launch requires Python 3.10+ and internet access to install dependencies. The authenticated local bridge now supports editor info, bounded scene-tree inspection, script reading, script preview, and opt-in script file writes with stale-hash checks and backups. It still needs manual verification in Godot 4. Scene mutations, run/playtest, browser-to-MCP actions, and DeepSeek provider calls remain incomplete. Script writes are disabled by default and require enabling the session toggle in the Godot dock. Do not expose local services to a public network.
 
 ## Documentation
 
