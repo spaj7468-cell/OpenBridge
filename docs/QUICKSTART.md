@@ -1,88 +1,49 @@
 # Quick start
 
-**Current status:** OpenBridge has a local MCP server and an early Godot 4 EditorPlugin adapter. The adapter can report editor information, inspect the active scene tree, read/preview GDScript, and apply script changes when you explicitly enable script writes in the editor dock. It does not yet create scenes or run the game. A Godot-native parser-validation tool is now implemented in the prototype but still needs manual Godot verification. Browser support currently captures the active tab title/URL; it is not yet connected to MCP tools.
+**Current status:** OpenBridge is an early prototype connecting selected browser AI chats to a local Godot 4 editor plugin. The extension prepares a task for the AI, captures a proposed GDScript response, asks Godot to parse it, then offers an explicit Apply action. Site selectors can change, so each provider still needs manual testing.
+
+## Windows: one launcher
+
+1. Download or clone this repository.
+2. Double-click **start-openbridge.bat**.
+3. If you want the launcher to start Godot too, paste the folder path of your Godot project when prompted. If Godot is not on PATH, provide the Godot 4 executable path.
+4. The launcher creates a local token once, stores it under **%LOCALAPPDATA%\\OpenBridge\\adapter-token.txt**, copies it to the clipboard when supported, and starts the MCP and browser gateway services.
+5. Install the **godot/addons/openbridge** folder into your game's **addons/openbridge** folder, enable **OpenBridge** under **Project → Project Settings → Plugins**, and keep the launcher window open.
+6. Install the browser extension by opening **chrome://extensions**, enabling Developer mode, choosing **Load unpacked**, and selecting **browser/extension**.
+7. Open a supported AI website (initial best-effort support: DeepSeek, ChatGPT, Claude, Gemini, Perplexity, Qwen, Kimi, Poe). Open the extension popup, paste the local token, save it, and check connection.
+
+The token is a local secret. Never paste it into an AI chat or commit it to a repository. Do not expose local services to a public network.
+
+## What the browser workflow does
+
+1. Type a task into the OpenBridge panel injected on the AI chat page.
+2. Click **Prepare task for AI**, review the prompt placed in the site's composer, then submit it using the site's normal send button.
+3. Ask the AI to return one complete GDScript code block whose first line is a comment such as: **# OpenBridge-Path: res://scripts/main_menu.gd**.
+4. Click **Check latest answer in Godot**. OpenBridge extracts the proposed script and asks the connected Godot editor to parse it.
+5. If the parser accepts it, review the file path and click **Apply in Godot**. Script writes must also be enabled in the OpenBridge dock for the current Godot session.
+6. Check the result in Godot. The bridge does not automatically run generated code.
+
+The extension does not directly run a model or make provider API calls. The AI conversation still happens on the provider's website. The browser adapter is best-effort because AI providers can change their page structure; if a composer or response is not detected, use the provider's normal chat and copy the response manually only after reviewing it.
+
+## Endpoints
+
+- MCP Streamable HTTP: http://127.0.0.1:8765/mcp
+- Browser gateway: http://127.0.0.1:8767
+- Godot adapter: http://127.0.0.1:8766
+
+The browser gateway accepts only authenticated requests and binds to 127.0.0.1. It uses the same OPENBRIDGE_ADAPTER_TOKEN as the Godot plugin. For manual startup, set the same random token in the environment of both processes before launching them.
 
 ## Requirements
 
-- Python 3.10+
+- Windows launcher: Python 3.10+ and PowerShell
 - Godot 4.x editor
-- An MCP-compatible AI host
-- Internet access for the first Python dependency installation
+- Chromium-based browser for the initial Manifest V3 extension build
+- Internet access for the first dependency installation
 
-## 1. Configure the shared local token
+## Current limitations
 
-The Godot plugin and Python server must use the same secret. In PowerShell, create a random token and keep it private:
-
-```powershell
-$env:OPENBRIDGE_ADAPTER_TOKEN = [guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N")
-$env:OPENBRIDGE_GODOT_PORT = "8766"
-```
-
-Launch Godot and OpenBridge from processes that inherit these environment variables. If your AI host starts the MCP server itself, set the same variables in that host's environment. Restart Godot after changing the token. Do not commit the token or expose port 8766 to a network.
-
-## 2. Install the Godot add-on
-
-1. Copy `godot/addons/openbridge` from this repository into your project's `addons/openbridge` folder.
-2. Open the project in Godot.
-3. Open **Project → Project Settings → Plugins** and enable **OpenBridge**.
-4. Find the OpenBridge dock. It should report that the local adapter is listening on `127.0.0.1:8766`.
-5. Open a scene before using the scene-tree tool.
-
-If the dock says the token is missing, launch Godot with `OPENBRIDGE_ADAPTER_TOKEN` set. If the port is busy, set `OPENBRIDGE_GODOT_PORT` to another port and set `OPENBRIDGE_GODOT_URL` to `http://127.0.0.1:<port>` and `OPENBRIDGE_GODOT_HEALTH_URL` to `http://127.0.0.1:<port>/health` for the MCP server.
-
-## 3. Start the MCP server
-
-Windows:
-
-```powershell
-.\start-openbridge.bat
-```
-
-Linux/macOS:
-
-```sh
-sh ./start-openbridge.sh
-```
-
-Configure the AI host to use the Streamable HTTP MCP endpoint:
-
-`http://127.0.0.1:8765/mcp`
-
-## Available MCP tools
-
-- `openbridge_status` — runtime and capability status.
-- `openbridge_capabilities` — implemented vs planned capabilities.
-- `godot_adapter_status` — authenticated local adapter health.
-- `godot_get_editor_info` — Godot version, project name, and active scene.
-- `godot_get_scene_tree` — bounded tree for the currently edited scene.
-- `godot_read_script` — read a project-relative `.gd` file.
-- `godot_preview_script_patch` — preview proposed script content without writing it.
-- `godot_validate_script` — ask Godot's GDScript parser to validate proposed code without saving or executing it.
-- `godot_apply_script_patch` — create or update a script after script writes are enabled in the dock. Updates require the current file's SHA-256. Existing scripts are backed up under `user://OpenBridge/backups`. This saves code but does not execute it.
-- `godot_validate_scene_spec` — validate a bounded data-only scene description.
-- `godot_validate_script_patch` — validate the shape and bounds of a proposed script patch.
-
-## 4. Use guarded script writing
-
-1. Ask the AI to read the relevant script and propose a change.
-2. Call `godot_preview_script_patch` first.
-3. Review the proposed content and current file state.
-4. In the Godot dock, explicitly enable **Enable script writes (session only)**.
-5. Call `godot_apply_script_patch` with `operation="create"` for a new file, or `operation="update"` plus the exact `expected_sha256` returned by reading the current file.
-6. Review the saved change in Godot. The adapter does not run the code automatically.
-
-Disable the session toggle when you are done. Generated GDScript is powerful; do not enable writes for an AI host you do not trust.
-
-## Browser extension
-
-Load the unpacked extension from `browser/extension` in a Chromium-based browser's extension developer mode. It currently captures only the active tab's title and URL after you click **Capture current tab**, then lets you copy that context. It does not read page contents, send data to a server, or invoke MCP tools yet.
-
-## Troubleshooting
-
-- **Python dependency install fails:** check internet access and retry.
-- **MCP connection fails:** confirm the server is running at `127.0.0.1:8765` and your host uses Streamable HTTP.
-- **Adapter token missing:** Godot and OpenBridge must inherit the same `OPENBRIDGE_ADAPTER_TOKEN`.
-- **Adapter disconnected:** confirm the plugin is enabled, port 8766 is free, and `OPENBRIDGE_GODOT_URL` matches the plugin port.
-- **No active scene:** open a scene in the Godot editor.
-- **Script writes disabled:** enable the session-only toggle in the OpenBridge dock.
-- **Parser validation:** `godot_validate_script` asks Godot to parse proposed source, but it does not prove the script behaves correctly. Runtime diagnostics and automated play-testing are not implemented yet.
+- AI-site DOM selectors are not guaranteed across provider updates or every browser locale.
+- Script changes are limited to GDScript files; the bridge does not create scenes or nodes yet.
+- Godot parsing is not a guarantee of correct runtime behavior.
+- Script writing remains disabled until enabled in the Godot dock; code is not executed automatically.
+- Linux/macOS launcher token setup is not yet as automated as the Windows launcher.
