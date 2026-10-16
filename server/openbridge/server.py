@@ -132,9 +132,9 @@ def _validate_script_patch(
     if not isinstance(script_path, str) or not script_path.strip():
         errors.append({"path": "script_path", "message": "script_path must be a non-empty project-relative path."})
     else:
-        if script_path.startswith(("/", "\\\\")) or ":" in script_path:
+        if script_path.startswith(("/", "\\")) or ":" in script_path:
             errors.append({"path": "script_path", "message": "Absolute paths and drive/resource prefixes are not allowed."})
-        if "\\\\" in script_path:
+        if "\\" in script_path:
             errors.append({"path": "script_path", "message": "Use forward slashes in project-relative paths."})
         parts = script_path.split("/")
         if any(part in {"", ".", ".."} for part in parts):
@@ -147,7 +147,7 @@ def _validate_script_patch(
 
     if not isinstance(content, str) or not content.strip():
         errors.append({"path": "content", "message": "content must be a non-empty string."})
-    elif "\\x00" in content:
+    elif "\x00" in content:
         errors.append({"path": "content", "message": "NUL characters are not allowed."})
     elif len(content.encode("utf-8")) > MAX_SCRIPT_BYTES:
         errors.append({"path": "content", "message": f"Script content exceeds the {MAX_SCRIPT_BYTES}-byte limit."})
