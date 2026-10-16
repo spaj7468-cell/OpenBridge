@@ -63,6 +63,14 @@ if not "%GODOT_PROJECT%"=="" (
     echo WARNING: No project.godot found at "%GODOT_PROJECT%".
     echo Starting the MCP service only.
   ) else (
+    if not exist "%GODOT_PROJECT%\addons\openbridge\plugin.cfg" (
+      echo Installing the OpenBridge Godot add-on into this project...
+      if not exist "%GODOT_PROJECT%\addons" mkdir "%GODOT_PROJECT%\addons"
+      xcopy "%~dp0godot\addons\openbridge" "%GODOT_PROJECT%\addons\openbridge" /E /I /Y >nul
+      if errorlevel 1 echo WARNING: Add-on copy failed. Install godot\addons\openbridge manually.
+    ) else (
+      echo OpenBridge add-on already exists in this project; leaving it untouched.
+    )
     set "GODOT_EXE="
     for /f "delims=" %%G in ('where godot.exe 2^>nul') do if not defined GODOT_EXE set "GODOT_EXE=%%G"
     for /f "delims=" %%G in ('where godot 2^>nul') do if not defined GODOT_EXE set "GODOT_EXE=%%G"
