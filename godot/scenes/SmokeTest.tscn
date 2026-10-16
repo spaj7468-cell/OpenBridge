@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[node name="SmokeTest" type="Node2D"]
+
+[node name="Player" type="CharacterBody2D" parent="."]
+
+[node name="Marker" type="Marker2D" parent="Player"]
