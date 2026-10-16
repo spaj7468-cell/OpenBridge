@@ -28,6 +28,7 @@ The following tools are implemented in the current prototype and require the God
 - `godot_read_script` — read-only project-relative GDScript read.
 - `godot_preview_script_patch` — read-only proposed-content preview.
 - `godot_apply_script_patch` — writes only when the user enables script writes in the Godot dock; updates require an expected SHA-256 and create a backup. It never executes the script.
+- `godot_validate_script` — asks Godot's parser to validate proposed source without saving or executing it.
 
 The following additional read operations are planned:
 - `godot_get_editor_info` — editor version, project identity, and connection state.
@@ -45,7 +46,7 @@ The following additional read operations are planned:
 
 ### GDScript authoring
 - `godot_propose_script_patch` — produce a bounded patch proposal without writing files.
-- `godot_validate_script` — ask Godot to parse/validate a script and return diagnostics.
+- Detailed parser/runtime diagnostic collection.
 - `godot_validate_script` — ask Godot to parse/validate a script and return diagnostics.
 
 ### Run and debug
