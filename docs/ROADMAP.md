@@ -31,7 +31,8 @@ A roadmap item is complete only when the acceptance criteria have been tested in
 - [x] Inspect a bounded active scene tree.
 - [x] Read selected project-relative GDScript files.
 - [x] Add session-only opt-in for script writes and backup on update.
-- [ ] Validate GDScript with Godot's parser and surface parser/runtime errors.
+- [x] Add Godot-native GDScript parser validation for proposed source (manual editor verification pending).
+- [ ] Surface detailed parser/runtime diagnostics from Godot.
 - [ ] Verify plugin manually on supported Godot 4 versions; add connection diagnostics and cancellation.
 - **Acceptance:** the agent can inspect an open Godot project without changing it and can return accurate editor data.
 
@@ -51,7 +52,8 @@ A roadmap item is complete only when the acceptance criteria have been tested in
 - [x] Validate project-relative paths, payload limits, and expected original hash.
 - [x] Keep script writes disabled by default behind a session-only editor toggle.
 - [x] Back up existing files before updates and keep writing separate from execution.
-- [ ] Add Godot parser validation and a proper diff viewer/per-patch approval dialog.
+- [x] Add a Godot-native parser-validation tool that does not save or execute source.
+- [ ] Add detailed parser diagnostics and a proper diff viewer/per-patch approval dialog.
 - **Acceptance:** the agent can preview and apply a small gameplay script, show recoverable changes, pass parser validation, and report errors honestly. Current write/preview operations are implemented in the prototype; parser validation and Godot manual verification remain open.
 
 ## M5 — Run, test, and repair loop
