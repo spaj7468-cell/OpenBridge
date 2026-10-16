@@ -69,3 +69,24 @@ def test_script_patch_rejects_oversized_content():
     result = _validate_script_patch("scripts/large.gd", "x" * (128 * 1024 + 1), "create")
     assert result["valid"] is False
     assert any(error["path"] == "content" for error in result["errors"])
+
+
+def test_script_patch_rejects_absolute_windows_path():
+    result = _validate_script_patch("C:/outside.gd", "extends Node\n", "create")
+    assert result["valid"] is False
+
+
+def test_script_patch_update_accepts_sha256_shape():
+    result = _validate_script_patch(
+        "scripts/player.gd",
+        "extends CharacterBody2D\n",
+        "update",
+        "a" * 64,
+    )
+    assert result["valid"] is True
+
+
+def test_script_patch_rejects_nul_content():
+    result = _validate_script_patch("scripts/player.gd", "extends Node\n\x00", "create")
+    assert result["valid"] is False
+    assert any(error["path"] == "content" for error in result["errors"])
