@@ -60,6 +60,8 @@ func _process(_delta: float) -> void:
 	while index >= 0:
 		var client: Dictionary = _clients[index]
 		var peer: StreamPeerTCP = client.get("peer")
+		if is_instance_valid(peer):
+			peer.poll()
 		if not is_instance_valid(peer) or peer.get_status() == StreamPeerTCP.STATUS_ERROR or peer.get_status() == StreamPeerTCP.STATUS_NONE:
 			_clients.remove_at(index)
 			index -= 1
