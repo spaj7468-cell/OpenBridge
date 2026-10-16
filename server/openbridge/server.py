@@ -278,24 +278,17 @@ def openbridge_capabilities() -> dict[str, Any]:
 
 @mcp.tool()
 def godot_adapter_status() -> dict[str, Any]:
-    """Check whether a local Godot editor adapter health endpoint is reachable."""
-    request = urllib.request.Request(GODOT_BRIDGE_URL, headers={"Accept": "application/json"})
-    try:
-        with urllib.request.urlopen(request, timeout=1.5) as response:
-            payload = response.read(16_384).decode("utf-8", errors="replace")
-            try:
-                data = json.loads(payload)
-            except json.JSONDecodeError:
-                data = {"response": payload[:1000]}
-            return {"connected": True, "endpoint": GODOT_BRIDGE_URL, "adapter": data}
-    except (urllib.error.URLError, TimeoutError, OSError) as exc:
-        return {
-            "connected": False,
-            "endpoint": GODOT_BRIDGE_URL,
-            "code": "ADAPTER_DISCONNECTED",
-            "message": "Godot adapter is not connected. This is expected until the editor plugin is implemented and enabled.",
-            "detail": type(exc).__name__,
-        }
+    """Check the authenticated local Godot editor adapter health endpoint."""
+    result = _godot_request("/health")
+    if result["ok"]:
+        return {"connected": True, "endpoint": GODOT_BRIDGE_URL, "adapter": result["data"]}
+    return {
+        "connected": False,
+        "endpoint": GODOT_BRIDGE_URL,
+        "code": result.get("error", "ADAPTER_DISCONNECTED"),
+        "message": result.get("message", "Godot adapter is not reachable or authentication failed."),
+        "detail": result.get("detail", {}),
+    }
 
 
 @mcp.tool()
