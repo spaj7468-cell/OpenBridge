@@ -41,6 +41,7 @@ Do not expose the runtime to a public network. The current build does not yet im
 - `openbridge_capabilities` — implemented vs planned capabilities.
 - `godot_adapter_status` — probes the future adapter health endpoint.
 - `godot_validate_scene_spec` — validates a bounded data-only scene description. It does not edit files or guarantee runtime compatibility with Godot.
+- `godot_validate_script_patch` — validates a proposed `.gd` file path, payload size, operation type, and expected SHA-256 metadata. It does not read or write project files, parse GDScript, or execute code.
 
 ## Example scene spec
 
