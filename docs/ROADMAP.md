@@ -6,38 +6,45 @@ The roadmap distinguishes intent from shipped functionality. No item is consider
 - [x] Define positioning and system boundaries.
 - [x] Define a zero-script user workflow.
 - [x] Document planned architecture, protocol, compatibility, and security.
+- [x] Add initial runtime package, scene-spec validator, sample specification, and tests.
+- [x] Add initial Godot editor-panel scaffold and browser popup scaffold.
+- [x] Add a CI workflow definition.
 - [ ] Select and add a license.
-- [ ] Add contribution templates and baseline CI.
+- [ ] Confirm the CI workflow passes on GitHub Actions.
 
 ## M1 — Local runtime
-- [ ] Implement the MCP server using the official MCP SDK.
-- [ ] Add configuration validation and a health/status command.
-- [ ] Add one-command launch scripts for Windows and Unix-like systems.
-- [ ] Bind to loopback by default and report the actual listening address.
-- [ ] Add unit tests for validation, errors, and permissions.
-- **Acceptance:** a clean checkout can install dependencies, start the service, query status, and shut down without exposing a network listener to the LAN.
+- [x] Implement an initial MCP server using the official MCP Python SDK.
+- [x] Add runtime status and capability discovery tools.
+- [x] Add a bounded, data-only scene-spec validator.
+- [x] Add one-command launch scripts for Windows and Unix-like systems.
+- [ ] Verify installation and MCP handshake from a clean checkout.
+- [ ] Add authenticated adapter connections and a reviewed local bridge transport.
+- [ ] Add stronger tests for invalid payloads, bounds, and permission policy.
+- **Acceptance:** a clean checkout can install dependencies, start the service, discover tools, validate a scene specification, and shut down without exposing a network listener to the LAN.
 
 ## M2 — Godot read-only integration
-- [ ] Add a Godot 4 editor plugin with an explicit enable/disable control.
-- [ ] Report Godot version, project path (redacted where needed), active scene, and plugin version.
+- [x] Add a Godot 4 editor plugin UI scaffold.
+- [ ] Implement a reviewed local adapter transport and health endpoint.
+- [ ] Report Godot version, plugin version, and active scene.
 - [ ] Inspect the current scene tree with bounded output.
 - [ ] Add connection status and useful diagnostics.
 - **Acceptance:** a user can connect the editor to the local runtime without writing GDScript.
 
 ## M3 — Structured scene creation
-- [ ] Define and version the scene-spec schema.
-- [ ] Validate allowed node types, property types, names, resource paths, depth, and node count.
+- [x] Draft the versioned scene-spec format and sample.
+- [x] Validate a safe subset of node types and properties without mutation.
+- [ ] Validate node-parent compatibility against the active Godot version.
 - [ ] Show a human-readable action plan before changing the project.
 - [ ] Create a scene and nodes using editor APIs.
 - [ ] Support undo/recovery and report exactly what changed.
 - **Acceptance:** a test project can create a simple 2D scene from structured data; invalid input causes no project mutation.
 
 ## M4 — Browser extension
-- [ ] Define supported browser targets and manifest permissions.
+- [x] Add a minimal Manifest V3 popup scaffold with no website permissions.
+- [ ] Define supported browser targets and reviewed permissions.
 - [ ] Add a user-triggered connection to the local service.
-- [ ] Display the connected runtime and available actions.
+- [ ] Display connected runtime and available actions.
 - [ ] Limit actions to explicit host permissions and supported origins.
-- [ ] Add a clear disconnect and permission reset flow.
 - **Acceptance:** no page is inspected or changed without a user-triggered action and appropriate permission.
 
 ## M5 — DeepSeek setup and AI workflow
