@@ -53,10 +53,11 @@ The local bridge binds to loopback by default. It must not silently upload proje
 | Data-only scene specification validator | Implemented; validation only |
 | GDScript patch-envelope validator | Implemented; validates paths/size/hash metadata only |
 | Windows and Unix-like launch scripts | Added; clean-install verification pending |
-| Godot editor plugin | Authenticated read-only HTTP bridge: editor info, bounded scene tree, script reading |
+| Godot editor plugin | Authenticated local bridge, editor info, bounded scene tree, script reading, preview, opt-in script writes with backups |
 | Browser extension | Popup scaffold; requests no website permissions |
 | Godot editor info, bounded scene-tree inspection, script reading | Implemented in bridge; requires Godot 4 manual verification |
-| GDScript creation/editing and diff preview | Planned |
+| GDScript preview and guarded file application | Implemented prototype; Godot manual verification pending |
+| Godot parser validation and run/playtest | Planned |
 | GDScript creation/editing and diff preview | Planned |
 | Run/playtest and debugger feedback loop | Planned |
 | DeepSeek API integration | Planned |
@@ -71,7 +72,7 @@ See [Quick start](docs/QUICKSTART.md).
 - Configure an MCP-compatible host to use `http://127.0.0.1:8765/mcp` with Streamable HTTP transport.
 - The Godot add-on listens on `127.0.0.1:8766` by default and provides read-only editor info, scene-tree inspection, and script reading. See [Quick start](docs/QUICKSTART.md).
 
-The first launch requires Python 3.10+ and internet access to install dependencies. The authenticated read-only editor bridge is implemented but still needs manual verification against supported Godot 4 versions. Script writes, scene mutations, run/playtest, browser actions, and DeepSeek provider calls remain incomplete. Do not expose local services to a public network.
+The first launch requires Python 3.10+ and internet access to install dependencies. The authenticated local bridge now supports editor info, bounded scene-tree inspection, script reading, script preview, and opt-in script file writes with stale-hash checks and backups. It still needs manual verification in Godot 4. Scene mutations, parser validation, run/playtest, browser actions, and DeepSeek provider calls remain incomplete. Script writes are disabled by default and require enabling the session toggle in the Godot dock. Do not expose local services to a public network.
 
 ## Documentation
 
