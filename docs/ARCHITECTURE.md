@@ -1,113 +1,85 @@
 # OpenBridge architecture
 
-**Status:** proposed architecture, not yet implemented end-to-end.
+**Status:** target architecture; current implementation is still an early prototype.
+
+OpenBridge follows the useful agent pattern demonstrated by ZeroScript: an AI chat issues tool calls, a local bridge dispatches them to the editor, and results/errors return to the model so it can continue. Godot-specific parity means the agent can inspect and modify scenes, write GDScript, run the project, and use actual diagnostics to iterate.
 
 ## 1. Components
 
-### OpenBridge MCP runtime
-The runtime is the boundary between an MCP-compatible host and adapters. It publishes typed tools and resources, validates arguments, checks permissions, dispatches approved operations, and returns structured results.
+### MCP runtime
+The runtime exposes typed tools, validates arguments, checks permission policy, dispatches operations to adapters, and returns structured results. A model request is not itself authorization to perform an action.
 
-The runtime must not infer that a tool is safe merely because an AI client requested it. Each operation needs an explicit schema, validation, capability check, and result.
+### Godot EditorPlugin adapter
+The plugin owns editor-aware operations:
+- editor/project information and active scene;
+- bounded scene-tree and resource inspection;
+- create/edit scenes, nodes, properties, resources, and signals;
+- read, create, and edit GDScript files;
+- run parser/editor validation;
+- launch and stop a project/scene and collect relevant diagnostics;
+- return exact operation results, errors, and recovery hints.
 
-### Godot adapter
-A Godot editor plugin runs inside the editor and owns editor-specific operations. The planned first capabilities are:
+The plugin is the right place to use Godot editor APIs. File and script operations must remain inside the selected project unless the user explicitly selects another workspace.
 
-- report editor and project status;
-- read the current scene tree;
-- create supported node types;
-- set allow-listed properties;
-- create a scene from a structured scene description;
-- save only after a preview/approval step;
-- return errors with the affected node/property and a recovery hint.
+### Script authoring and execution
+AI-written GDScript is a first-class capability. Many requested features—movement, UI interaction, inventory logic, dialogue flow, save/load, and gameplay systems—cannot be implemented by node creation alone.
 
-The adapter should use Godot editor APIs and structured data, not generate arbitrary GDScript as the normal path.
+Keep these actions separate:
+1. **Read** a user-selected/relevant script.
+2. **Propose** a new file or patch.
+3. **Validate** syntax and project-relative paths.
+4. **Preview** a diff and affected files.
+5. **Apply** after the configured approval policy.
+6. **Run/test** only as a separate visible action.
+7. **Inspect diagnostics** and propose a targeted repair.
+
+Godot scripts can perform powerful project-level operations, so do not claim GDScript is sandboxed. Use explicit user approval for running generated or changed code, a clear stop control, project backups/version control, and a narrow local bridge. Never silently execute code merely because a model returned it.
+
+### Local adapter bridge
+The runtime and editor plugin need a reviewed localhost protocol with authenticated sessions, origin checks, message-size limits, timeouts, and disconnect handling. Loopback binding alone is not sufficient authentication. Do not advertise an authenticated bridge until the implementation and tests exist.
 
 ### Browser adapter
-A browser extension provides a user-visible permission boundary. It should request only necessary permissions, act only on supported tabs/origins, and require explicit user action for page mutations or sensitive operations. It should never silently read all pages or send page contents to an AI provider.
+The extension remains a separate future component. It should use minimum permissions, active-tab/user-triggered access, and explicit origins. It is not required for the first useful Godot agent milestone.
 
-### AI provider integration
-DeepSeek is the first planned setup guide/provider target. The core tool contract should not depend on one model provider. API keys must be stored using the host's supported secret mechanism or supplied through environment variables; never commit keys into the repository or extension bundle.
+### AI provider adapter
+DeepSeek is a possible first provider, but tool schemas should remain model-independent. Keep API credentials in a trusted local configuration or environment and never bundle them into the extension or a Godot project.
 
-### Launcher and health endpoint
-The launcher starts the local runtime, verifies configuration, reports the bound address and port, and shuts down cleanly. The service should bind to loopback by default and expose a health/status check that does not reveal secrets.
+## 2. Agent loop
 
-## 2. Request flow
+1. User describes a desired result.
+2. Agent inspects only relevant project context.
+3. Model chooses tools and proposes a plan or code patch.
+4. OpenBridge validates schemas, paths, permissions, and editor state.
+5. OpenBridge previews scene/file changes and asks for approval where required.
+6. Adapter applies approved edits and returns structured results.
+7. Godot parser/editor validation checks the changes.
+8. User-approved run/playtest produces logs and errors.
+9. Agent uses those diagnostics to propose a focused repair.
+10. Repeat until tests pass or report a clear blocker.
 
-1. The user configures an MCP-compatible client and starts OpenBridge.
-2. The host discovers the advertised tools and their schemas.
-3. The model proposes a sequence of structured actions.
-4. OpenBridge validates each action and checks the current permission policy.
-5. Mutating actions are shown in a preview or require confirmation.
-6. The relevant adapter executes only the supported operation.
-7. The adapter returns a structured result and any diagnostics.
-8. The host can use the result to propose the next step.
+Tool calls must be real operations with observable outcomes, not text pretending that the project changed.
 
-## 3. Structured scene description
+## 3. Scene and script contracts
 
-The planned scene format is data, not executable code. Example:
+Structured scene specifications are useful for deterministic node-tree edits. They complement rather than replace GDScript. Script edits should use project-relative paths and a patch/diff representation, not unrestricted file writes. Before applying a patch, validate:
+- the selected project root and canonical target path;
+- file size and patch bounds;
+- expected original content/hash to avoid overwriting concurrent user changes;
+- file extension and operation type;
+- whether the operation creates, changes, or deletes content;
+- the approval requirement and backup/recovery strategy.
 
-```json
-{
-  "format": "openbridge.scene/v1",
-  "root": {
-    "name": "Main",
-    "type": "Node2D",
-    "children": [
-      {
-        "name": "Player",
-        "type": "CharacterBody2D",
-        "properties": {
-          "position": {"x": 160, "y": 120}
-        }
-      },
-      {
-        "name": "Camera",
-        "type": "Camera2D"
-      }
-    ]
-  }
-}
-```
+A scene plan and a script patch should carry a short-lived project/state token so stale plans cannot accidentally modify another project.
 
-This is an illustrative format only; it is not yet a supported input contract. A future implementation must validate node types, property types, resource paths, tree depth, node count, and project boundaries before applying it.
+## 4. Error and task handling
 
-## 4. Boundaries and failure handling
+- Return stable error codes and safe, actionable messages.
+- Distinguish parser errors, runtime errors, missing resources, adapter disconnects, timeouts, and permission denials.
+- Use bounded retries; do not loop indefinitely.
+- Support cancellation and report partial changes after failure.
+- Redact credentials and unrelated project data from logs.
+- Never claim success without a result from the editor or test process.
 
-- MCP transport is separate from Godot and browser adapter protocols.
-- Adapter versions and capabilities are discoverable.
-- Timeouts and disconnects return typed errors; they do not trigger unlimited retries.
-- Operations should be idempotent when possible.
-- Long tasks return progress or a task identifier instead of blocking forever.
-- File paths are canonicalized and constrained to the selected project/workspace.
-- Logs redact tokens, credentials, and sensitive page content.
+## 5. Initial implementation order
 
-## 5. Proposed repository layout
-
-```text
-OpenBridge/
-├── README.md
-├── CONTRIBUTING.md
-├── LICENSE                 # add after license choice
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── COMPATIBILITY.md
-│   ├── PROTOCOL.md
-│   ├── ROADMAP.md
-│   ├── SECURITY.md
-│   └── ZERO_SCRIPT_WORKFLOW.md
-├── server/
-│   └── openbridge/         # MCP runtime and adapter registry
-├── godot/
-│   └── addons/openbridge/  # editor plugin
-├── browser/
-│   └── extension/          # browser extension source
-├── examples/
-│   └── scene-specs/
-└── tests/
-    ├── unit/
-    └── integration/
-```
-
-## 6. Initial implementation order
-
-Build and test the local runtime and health check first; then add one narrow Godot read-only tool, followed by a previewable node-creation tool. Add browser integration only after the permission model and local bridge contract are defined.
+Build a secure read-only editor connection first; then add diff-previewed GDScript editing and scene/resource operations. Add run/debug feedback as a separate milestone. Browser automation is secondary to a working Godot agent.
