@@ -490,7 +490,8 @@ class _BrowserGatewayHandler(BaseHTTPRequestHandler):
                 self._send(502, parsed)
                 return
             self._send(200, {
-                "ok": bool(parsed.get("data", {}).get("valid", False)),
+                "ok": True,
+                "valid": bool(parsed.get("data", {}).get("valid", False)),
                 "path": path,
                 "operation": operation,
                 "expected_sha256": expected,
