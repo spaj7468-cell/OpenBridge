@@ -4,39 +4,42 @@
 
 ## Intended role
 
-DeepSeek is the first planned AI provider for the zero-script workflow. The model should propose a structured scene specification and may request tools, but the OpenBridge runtime—not the model—validates and executes each operation.
+DeepSeek is a possible first AI provider for the Godot agent. The model should inspect relevant project context, request tools, write or edit GDScript when needed, build scenes, run approved tests, and use real diagnostics to repair failures. The core tool contract remains provider-independent.
 
-The provider adapter should remain separate from the MCP server so users can also connect another MCP-compatible host. Never place an API key in browser extension files, source control, a Godot project, or client-visible logs.
+Never place an API key in browser extension files, source control, a Godot project, or client-visible logs.
 
-## Planned flow
+## Planned agent loop
 
-1. User supplies a request such as “Create a 2D player scene with a camera.”
-2. The AI proposes a versioned, data-only scene specification.
-3. OpenBridge validates its schema, limits, node types, and properties.
-4. The editor adapter checks compatibility against the active Godot version.
-5. OpenBridge shows a plan preview and waits for approval.
-6. Only approved, allow-listed operations are sent to the editor plugin.
-7. Results and errors are returned to the AI host for a concise explanation.
+1. User requests a feature, such as a player controller and main menu.
+2. The agent inspects relevant scenes, scripts, project settings, and errors.
+3. The model proposes a plan and script patches.
+4. OpenBridge validates tool arguments, target paths, patch size, expected file state, and permissions.
+5. OpenBridge shows a diff and scene/resource change preview.
+6. The user approves edits under the configured policy.
+7. The Godot adapter applies changes and runs parser/editor validation.
+8. The user approves running the changed project/scene.
+9. Godot returns actual logs, errors, and test results.
+10. The agent proposes focused repairs and repeats within bounded limits.
 
-The AI must not be allowed to bypass validation by returning GDScript, JavaScript, shell commands, or arbitrary file contents.
+Generated GDScript is expected and supported. It must not bypass path validation, preview, approval, or execution policy. Tool calls are requests, not permission to perform every requested action.
 
 ## Tool calls are requests, not execution
 
-DeepSeek's official Tool Calls documentation explains that the model returns a tool name and arguments; the integrating application must provide the tool's actual implementation and return its result to the model. Therefore OpenBridge must validate the tool name, JSON arguments, permissions, and current editor state before dispatch.
+DeepSeek's official Tool Calls documentation explains that the model returns a tool name and arguments; the integrating application must provide the tool implementation and return results to the model. OpenBridge must validate the tool name, JSON arguments, permissions, and current editor state before dispatch.
 
 ## Configuration principles
 
-- Use the API base URL and model IDs currently listed in the official DeepSeek documentation rather than hard-coding assumptions in the UI.
-- Keep credentials in an environment variable or a trusted local secret store.
-- Do not include API keys in extension manifests, frontend JavaScript, screenshots, crash reports, or Git history.
+- Use API base URL and model IDs currently listed in official DeepSeek documentation.
+- Keep credentials in an environment variable or trusted local secret store.
+- Never include API keys in extension manifests, frontend JavaScript, screenshots, crash reports, or Git history.
 - Make external API use visible to the user.
-- Provide a clear error for missing credentials, network failures, rate limits, malformed output, and unsupported tool calls.
-- Bound the size of prompts, scene specifications, and returned data.
-- Do not send full project directories or whole browser pages by default.
+- Provide clear errors for missing credentials, network failures, rate limits, malformed output, and unsupported tool calls.
+- Bound prompt size, patch size, and returned diagnostics.
+- Do not send full project directories by default; request only relevant files/context.
 
 ## Thinking-mode compatibility
 
-DeepSeek documents that when tool calls are used in thinking mode, the relevant reasoning field must be preserved in subsequent API requests. The provider adapter must follow the current official protocol exactly and test both thinking and non-thinking modes instead of assuming they share identical message handling.
+DeepSeek documents that when tool calls are used in thinking mode, the relevant reasoning field must be preserved in subsequent API requests. The provider adapter must follow the current official protocol exactly and test both thinking and non-thinking modes.
 
 ## Official references
 
