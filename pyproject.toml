@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ouri-openbridge"
+version = "0.1.0"
+description = "Local-first MCP runtime and structured editor bridge for OpenBridge"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "mcp>=1.0.0,<2.0.0",
+]
+
+[project.scripts]
+openbridge = "openbridge.server:main"
+
+[tool.setuptools.packages.find]
+where = ["server"]
+include = ["openbridge*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["server"]
+testpaths = ["tests"]
