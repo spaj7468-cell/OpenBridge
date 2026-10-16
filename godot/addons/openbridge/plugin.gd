@@ -14,6 +14,8 @@ var _clients: Array[Dictionary] = []
 var _bridge_token := ""
 var _bridge_port := DEFAULT_BRIDGE_PORT
 var _bridge_started := false
+var _script_writes_enabled := false
+var _write_button: Button
 
 
 func _enter_tree() -> void:
@@ -109,8 +111,14 @@ func _build_panel() -> void:
 	refresh.text = "Refresh status"
 	refresh.pressed.connect(_refresh_status)
 	_panel.add_child(refresh)
+	_write_button = Button.new()
+	_write_button.text = "Enable script writes (session only)"
+	_write_button.toggle_mode = true
+	_write_button.button_pressed = false
+	_write_button.toggled.connect(_on_write_toggle)
+	_panel.add_child(_write_button)
 	var security_note := Label.new()
-	security_note.text = "Loopback only. Read-only tools are available first. Script writes and execution require a later reviewed approval workflow."
+	security_note.text = "Loopback only. Script writes are OFF by default. Enable them only when you trust the connected AI host; this session toggle resets when the editor restarts."
 	security_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_panel.add_child(security_note)
 	add_control_to_dock(DOCK_SLOT_RIGHT_UL, _panel)
@@ -123,6 +131,13 @@ func _read_port_setting() -> int:
 		if parsed >= 1024 and parsed <= 65535:
 			return parsed
 	return DEFAULT_BRIDGE_PORT
+
+
+func _on_write_toggle(enabled: bool) -> void:
+	_script_writes_enabled = enabled
+	if is_instance_valid(_write_button):
+		_write_button.text = "Script writes ENABLED for this session" if enabled else "Enable script writes (session only)"
+		_write_button.modulate = Color(1.0, 0.72, 0.45) if enabled else Color(1, 1, 1)
 
 
 func _refresh_status() -> void:
@@ -193,25 +208,92 @@ func _dispatch_request(request: Dictionary) -> Dictionary:
 		var count := [0]
 		var tree := _serialize_node(root, 1, count)
 		return {"status": 200, "body": {"scene_path": root.scene_file_path, "node_count": count[0], "root": tree}}
-	if method == "POST" and path == "/script/read":
+	if method == "POST" and path in ["/script/read", "/script/preview", "/script/apply"]:
 		var payload: Variant = JSON.parse_string(request.get("body_text", ""))
 		if not payload is Dictionary:
 			return {"status": 400, "body": {"error": "INVALID_JSON"}}
 		var script_path := str(payload.get("path", ""))
 		if not _is_safe_script_path(script_path):
 			return {"status": 400, "body": {"error": "INVALID_SCRIPT_PATH"}}
-		var absolute := ProjectSettings.globalize_path("res://" + script_path)
-		if not FileAccess.file_exists("res://" + script_path):
-			return {"status": 404, "body": {"error": "FILE_NOT_FOUND", "path": script_path}}
-		var file := FileAccess.open("res://" + script_path, FileAccess.READ)
-		if file == null:
-			return {"status": 500, "body": {"error": "FILE_READ_FAILED", "detail": FileAccess.get_open_error()}}
-		if file.get_length() > MAX_SCRIPT_BYTES:
-			file.close()
-			return {"status": 413, "body": {"error": "SCRIPT_TOO_LARGE", "limit_bytes": MAX_SCRIPT_BYTES}}
-		var content := file.get_as_text()
-		file.close()
-		return {"status": 200, "body": {"path": script_path, "content": content, "sha256": content.sha256_text(), "bytes": content.to_utf8_buffer().size(), "absolute_path_returned": false, "note": "Read-only operation. File was not changed or executed."}}
+		var file_exists := FileAccess.file_exists("res://" + script_path)
+		if method == "POST" and path == "/script/read":
+			if not file_exists:
+				return {"status": 404, "body": {"error": "FILE_NOT_FOUND", "path": script_path}}
+			var read_file := FileAccess.open("res://" + script_path, FileAccess.READ)
+			if read_file == null:
+				return {"status": 500, "body": {"error": "FILE_READ_FAILED", "detail": FileAccess.get_open_error()}}
+			if read_file.get_length() > MAX_SCRIPT_BYTES:
+				read_file.close()
+				return {"status": 413, "body": {"error": "SCRIPT_TOO_LARGE", "limit_bytes": MAX_SCRIPT_BYTES}}
+			var current_content := read_file.get_as_text()
+			read_file.close()
+			return {"status": 200, "body": {"path": script_path, "content": current_content, "sha256": current_content.sha256_text(), "bytes": current_content.to_utf8_buffer().size(), "absolute_path_returned": false, "note": "Read-only operation. File was not changed or executed."}}
+		if path == "/script/preview":
+			var proposed: Variant = payload.get("content", "")
+			if not proposed is String or proposed.is_empty() or proposed.to_utf8_buffer().size() > MAX_SCRIPT_BYTES:
+				return {"status": 400, "body": {"error": "INVALID_SCRIPT_CONTENT", "limit_bytes": MAX_SCRIPT_BYTES}}
+			var existing_content := ""
+			var existing_hash := ""
+			if file_exists:
+				var existing_file := FileAccess.open("res://" + script_path, FileAccess.READ)
+				if existing_file == null:
+					return {"status": 500, "body": {"error": "FILE_READ_FAILED"}}
+				if existing_file.get_length() > MAX_SCRIPT_BYTES:
+					existing_file.close()
+					return {"status": 413, "body": {"error": "SCRIPT_TOO_LARGE"}}
+				existing_content = existing_file.get_as_text()
+				existing_file.close()
+				existing_hash = existing_content.sha256_text()
+			return {"status": 200, "body": {"path": script_path, "exists": file_exists, "current_sha256": existing_hash, "proposed_sha256": proposed.sha256_text(), "current_content": existing_content, "proposed_content": proposed, "write_enabled": _script_writes_enabled, "note": "Preview only; no file was changed and code was not executed."}}
+		if path == "/script/apply":
+			if not _script_writes_enabled:
+				return {"status": 403, "body": {"error": "SCRIPT_WRITES_DISABLED", "message": "Enable script writes in the OpenBridge dock for this editor session."}}
+			var proposed_content: Variant = payload.get("content", "")
+			var operation := str(payload.get("operation", ""))
+			var expected_hash := str(payload.get("expected_sha256", ""))
+			if not proposed_content is String or proposed_content.is_empty() or proposed_content.to_utf8_buffer().size() > MAX_SCRIPT_BYTES or proposed_content.contains("\\u0000"):
+				return {"status": 400, "body": {"error": "INVALID_SCRIPT_CONTENT", "limit_bytes": MAX_SCRIPT_BYTES}}
+			if operation not in ["create", "update"]:
+				return {"status": 400, "body": {"error": "INVALID_OPERATION"}}
+			if operation == "create" and file_exists:
+				return {"status": 409, "body": {"error": "FILE_ALREADY_EXISTS", "path": script_path}}
+			if operation == "update" and not file_exists:
+				return {"status": 404, "body": {"error": "FILE_NOT_FOUND", "path": script_path}}
+			var old_content := ""
+			if file_exists:
+				var old_file := FileAccess.open("res://" + script_path, FileAccess.READ)
+				if old_file == null:
+					return {"status": 500, "body": {"error": "FILE_READ_FAILED"}}
+				if old_file.get_length() > MAX_SCRIPT_BYTES:
+					old_file.close()
+					return {"status": 413, "body": {"error": "SCRIPT_TOO_LARGE"}}
+				old_content = old_file.get_as_text()
+				old_file.close()
+				if old_content.sha256_text() != expected_hash:
+					return {"status": 409, "body": {"error": "STALE_SCRIPT", "current_sha256": old_content.sha256_text()}}
+			if operation == "create" and not expected_hash.is_empty():
+				return {"status": 400, "body": {"error": "INVALID_EXPECTED_HASH"}}
+			var backup_path := ""
+			if file_exists:
+				var backup_dir := "user://OpenBridge/backups"
+				DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(backup_dir))
+				backup_path = backup_dir.path_join(str(Time.get_unix_time_from_system()) + "_" + script_path.replace("/", "_") + ".bak")
+				var backup_file := FileAccess.open(backup_path, FileAccess.WRITE)
+				if backup_file == null:
+					return {"status": 500, "body": {"error": "BACKUP_FAILED", "detail": FileAccess.get_open_error()}}
+				backup_file.store_string(old_content)
+				backup_file.close()
+			var parent_path := script_path.get_base_dir()
+			if parent_path != ".":
+				var directory_error := DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://" + parent_path))
+				if directory_error != OK:
+					return {"status": 500, "body": {"error": "DIRECTORY_CREATE_FAILED", "detail": directory_error}}
+			var output := FileAccess.open("res://" + script_path, FileAccess.WRITE)
+			if output == null:
+				return {"status": 500, "body": {"error": "FILE_WRITE_FAILED", "detail": FileAccess.get_open_error(), "backup_path": backup_path}}
+			output.store_string(proposed_content)
+			output.close()
+			return {"status": 200, "body": {"applied": true, "path": script_path, "operation": operation, "sha256": proposed_content.sha256_text(), "backup_path": backup_path, "executed": false, "note": "Script saved but not executed. Run the project separately after reviewing the change."}}
 	return {"status": 404, "body": {"error": "NOT_FOUND"}}
 
 
