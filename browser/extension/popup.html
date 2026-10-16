@@ -1,4 +1,46 @@
 <!doctype html>
 <html lang="ru">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>OpenBridge</title><link rel="stylesheet" href="popup.css"><script src="popup.js" defer></script></head>
-<body><main class="panel"><div class="top"><div class="brand-mark">OB</div><div><p class="eyebrow">OURI · LOCAL AI BRIDGE</p><h1>OpenBridge</h1></div></div><p class="intro">Пиши задачу в браузерном ИИ — передавай предложенный GDScript в Godot с проверкой и подтверждением.</p><div class="status" id="status-card" role="status" aria-live="polite"><span class="status-icon" id="status-icon">●</span><div><strong id="status-title">Не подключено</strong><p id="status-text">Укажи локальный токен и проверь MCP-сервер.</p></div></div><label for="token">Локальный токен OpenBridge</label><input id="token" type="password" autocomplete="off" placeholder="Тот же OPENBRIDGE_ADAPTER_TOKEN"><p class="hint">Токен хранится локально в настройках расширения. Не вставляй его в чат с ИИ.</p><button id="save-token" type="button">Сохранить токен</button><button id="check-connection" class="secondary" type="button">Проверить соединение</button><div class="divider"></div><div class="endpoint"><span class="dot"></span><div><strong>Локальный шлюз</strong><code>127.0.0.1:8767</code></div></div><p class="hint">Godot должен быть открыт с включённым плагином OpenBridge. Для записи скриптов также требуется включить разрешение записи в панели плагина.</p><footer>Manifest V3 · Только по действию пользователя · OpenBridge 0.2.0</footer></main></body></html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenBridge — ИИ для Godot</title>
+  <link rel="stylesheet" href="popup.css">
+  <script src="popup.js" defer></script>
+</head>
+<body>
+  <main class="panel">
+    <div class="top">
+      <div class="brand-mark">OB</div>
+      <div>
+        <p class="eyebrow">OURI · РАСШИРЕНИЕ ДЛЯ БРАУЗЕРА</p>
+        <h1>OpenBridge</h1>
+      </div>
+    </div>
+    <p class="intro">Расширение для работы с веб-сайтами ИИ: помогает передавать задачи из DeepSeek, ChatGPT и других поддерживаемых чатов в Godot 4.</p>
+    <section class="purpose" aria-labelledby="purpose-title">
+      <strong id="purpose-title">Для чего это расширение?</strong>
+      <p>Напиши ИИ, что нужно создать в игре. OpenBridge помогает получить GDScript из ответа, проверить синтаксис через Godot и применить файл после твоего подтверждения.</p>
+      <div class="chips" aria-label="Поддерживаемые сайты">
+        <span>DeepSeek</span><span>ChatGPT</span><span>Claude</span><span>Gemini</span><span>Qwen</span><span>и другие</span>
+      </div>
+    </section>
+    <div class="status" id="status-card" role="status" aria-live="polite">
+      <span class="status-icon" id="status-icon">●</span>
+      <div><strong id="status-title">Не подключено</strong><p id="status-text">Запусти OpenBridge и укажи локальный токен.</p></div>
+    </div>
+    <label for="token">Локальный токен OpenBridge</label>
+    <input id="token" type="password" autocomplete="off" placeholder="Тот же OPENBRIDGE_ADAPTER_TOKEN">
+    <p class="hint">Токен хранится локально в настройках расширения. Не отправляй его в чат с ИИ и не публикуй.</p>
+    <button id="save-token" type="button">Сохранить токен</button>
+    <button id="check-connection" class="secondary" type="button">Проверить соединение с Godot</button>
+    <div class="divider"></div>
+    <div class="endpoint"><span class="dot"></span><div><strong>Локальный шлюз OpenBridge</strong><code>127.0.0.1:8767</code></div></div>
+    <p class="hint">Нужны запущенный OpenBridge и редактор Godot 4 с включённым плагином. Для записи скриптов отдельно включи разрешение в панели плагина.</p>
+    <section class="privacy">
+      <strong>Доступ и безопасность</strong>
+      <p>Расширение работает на перечисленных AI-сайтах и связывается с локальным адресом компьютера. Оно не предоставляет ИИ доступ ко всем файлам и не запускает созданный код автоматически. Перед записью скрипт должен пройти проверку и получить твоё подтверждение.</p>
+    </section>
+    <footer>Расширение для браузера · ИИ → Godot 4 · Manifest V3 · OpenBridge 0.2.1</footer>
+  </main>
+</body>
+</html>
