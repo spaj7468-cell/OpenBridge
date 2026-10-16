@@ -5,7 +5,7 @@ Part of the **OuRi** ecosystem.
 
 OpenBridge aims to let an AI work inside the Godot editor from a normal AI chat or MCP-compatible host. The user describes the game and the agent inspects the project, edits GDScript, builds scenes, configures nodes and resources, runs tests, reads errors, and iterates. The user does not need to write code manually for supported tasks — **but the AI absolutely can and often must write GDScript** to implement game logic and interfaces.
 
-> **Status: early prototype.** The MCP runtime and data-only scene-spec validator are present. The Godot plugin and browser extension are UI scaffolds; they do not yet create scenes, edit scripts, run projects, or manipulate websites. The full agent loop described below is the product target, not a claim that every feature is already implemented.
+> **Status: early prototype.** The authenticated Godot editor bridge supports editor info, bounded scene-tree inspection, script reading/preview, and opt-in script file writes with backups. The browser extension captures the active tab's title and URL only after a click. Scene creation, Godot parser validation, run/debug integration, and browser-to-MCP tool execution are not implemented yet.
 
 ## Product goal
 
@@ -55,10 +55,9 @@ The local bridge binds to loopback by default. It must not silently upload proje
 | Windows and Unix-like launch scripts | Added; clean-install verification pending |
 | Godot editor plugin | Authenticated local bridge, editor info, bounded scene tree, script reading, preview, opt-in script writes with backups |
 | Browser extension | User-triggered active-tab title/URL capture and copy; no page-content scraping or MCP tool execution |
-| Godot editor info, bounded scene-tree inspection, script reading | Implemented in bridge; requires Godot 4 manual verification |
+| Godot editor info, bounded scene-tree inspection, script reading | Implemented in prototype; Godot manual verification pending |
 | GDScript preview and guarded file application | Implemented prototype; Godot manual verification pending |
 | Godot parser validation and run/playtest | Planned |
-| GDScript creation/editing and diff preview | Planned |
 | Run/playtest and debugger feedback loop | Planned |
 | DeepSeek API integration | Planned |
 
@@ -70,7 +69,7 @@ See [Quick start](docs/QUICKSTART.md).
 - Linux/macOS: run `sh ./start-openbridge.sh`.
 - Set the same private `OPENBRIDGE_ADAPTER_TOKEN` in the environment for Godot and OpenBridge before launching both.
 - Configure an MCP-compatible host to use `http://127.0.0.1:8765/mcp` with Streamable HTTP transport.
-- The Godot add-on listens on `127.0.0.1:8766` by default and provides read-only editor info, scene-tree inspection, and script reading. See [Quick start](docs/QUICKSTART.md).
+- The Godot add-on listens on `127.0.0.1:8766` by default and provides read-only inspection plus guarded GDScript file writes when enabled in the dock. See [Quick start](docs/QUICKSTART.md).
 
 The first launch requires Python 3.10+ and internet access to install dependencies. The authenticated local bridge now supports editor info, bounded scene-tree inspection, script reading, script preview, and opt-in script file writes with stale-hash checks and backups. It still needs manual verification in Godot 4. Scene mutations, parser validation, run/playtest, browser actions, and DeepSeek provider calls remain incomplete. Script writes are disabled by default and require enabling the session toggle in the Godot dock. Do not expose local services to a public network.
 
