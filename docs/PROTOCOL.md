@@ -22,10 +22,12 @@
 
 ### Godot read operations
 
-The following read-only tools are implemented in the current prototype and require the Godot add-on to be enabled with a matching `OPENBRIDGE_ADAPTER_TOKEN`:
-- `godot_get_editor_info`
-- `godot_get_scene_tree`
-- `godot_read_script`
+The following tools are implemented in the current prototype and require the Godot add-on to be enabled with a matching `OPENBRIDGE_ADAPTER_TOKEN`:
+- `godot_get_editor_info` — read-only.
+- `godot_get_scene_tree` — bounded, read-only.
+- `godot_read_script` — read-only project-relative GDScript read.
+- `godot_preview_script_patch` — read-only proposed-content preview.
+- `godot_apply_script_patch` — writes only when the user enables script writes in the Godot dock; updates require an expected SHA-256 and create a backup. It never executes the script.
 
 The following additional read operations are planned:
 - `godot_get_editor_info` — editor version, project identity, and connection state.
@@ -43,8 +45,7 @@ The following additional read operations are planned:
 
 ### GDScript authoring
 - `godot_propose_script_patch` — produce a bounded patch proposal without writing files.
-- `godot_preview_script_patch` — show the exact diff and validate target path/original file state.
-- `godot_apply_script_patch` — apply an approved patch and create a recovery copy where applicable.
+- `godot_validate_script` — ask Godot to parse/validate a script and return diagnostics.
 - `godot_validate_script` — ask Godot to parse/validate a script and return diagnostics.
 
 ### Run and debug
