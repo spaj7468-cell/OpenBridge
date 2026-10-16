@@ -53,9 +53,10 @@ The local bridge binds to loopback by default. It must not silently upload proje
 | Data-only scene specification validator | Implemented; validation only |
 | GDScript patch-envelope validator | Implemented; validates paths/size/hash metadata only |
 | Windows and Unix-like launch scripts | Added; clean-install verification pending |
-| Godot editor plugin | UI scaffold only |
+| Godot editor plugin | Authenticated read-only HTTP bridge: editor info, bounded scene tree, script reading |
 | Browser extension | Popup scaffold; requests no website permissions |
-| Godot scene and script inspection/editing | Planned |
+| Godot editor info, bounded scene-tree inspection, script reading | Implemented in bridge; requires Godot 4 manual verification |
+| GDScript creation/editing and diff preview | Planned |
 | GDScript creation/editing and diff preview | Planned |
 | Run/playtest and debugger feedback loop | Planned |
 | DeepSeek API integration | Planned |
@@ -66,9 +67,11 @@ See [Quick start](docs/QUICKSTART.md).
 
 - Windows: run `start-openbridge.bat`.
 - Linux/macOS: run `sh ./start-openbridge.sh`.
+- Set the same private `OPENBRIDGE_ADAPTER_TOKEN` in the environment for Godot and OpenBridge before launching both.
 - Configure an MCP-compatible host to use `http://127.0.0.1:8765/mcp` with Streamable HTTP transport.
+- The Godot add-on listens on `127.0.0.1:8766` by default and provides read-only editor info, scene-tree inspection, and script reading. See [Quick start](docs/QUICKSTART.md).
 
-The first launch requires Python 3.10+ and internet access to install dependencies. Do not expose the local server to a public network. The current prototype is not yet a working Godot editor agent.
+The first launch requires Python 3.10+ and internet access to install dependencies. The authenticated read-only editor bridge is implemented but still needs manual verification against supported Godot 4 versions. Script writes, scene mutations, run/playtest, browser actions, and DeepSeek provider calls remain incomplete. Do not expose local services to a public network.
 
 ## Documentation
 
